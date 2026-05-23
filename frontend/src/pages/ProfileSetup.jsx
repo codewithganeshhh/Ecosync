@@ -1,10 +1,26 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Camera, MapPin, Check, Loader2, Truck } from 'lucide-react';
+import { Camera, MapPin, Check, Loader2, ChevronDown } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import { toast } from 'react-toastify';
+
+const JAMSHEDPUR_AREAS = [
+  'Sakchi',
+  'Mango',
+  'Azad Basti',
+  'Dimna',
+  'Bistupur',
+  'Kadma',
+  'Sonari',
+  'Golmuri',
+  'Jugsalai',
+  'Telco',
+  'Baridih',
+  'Sidhgora',
+  'Adityapur'
+];
 
 const ProfileSetup = () => {
   const { user, updateUser } = useContext(AuthContext);
@@ -13,7 +29,6 @@ const ProfileSetup = () => {
   const [photoPreview, setPhotoPreview] = useState(user?.profilePhoto || '');
   const [photoFile, setPhotoFile] = useState(null);
   const [location, setLocation] = useState(user?.location || '');
-  const [fetchingLocation, setFetchingLocation] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -25,38 +40,6 @@ const ProfileSetup = () => {
       setPhotoFile(file);
       setPhotoPreview(URL.createObjectURL(file));
     }
-  };
-
-  const getRealTimeLocation = () => {
-    setFetchingLocation(true);
-    if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser');
-      setFetchingLocation(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          // Reverse geocoding using OpenStreetMap (Nominatim)
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          const address = data.display_name || `${latitude}, ${longitude}`;
-          setLocation(address);
-          toast.success('Location fetched successfully!');
-        } catch (error) {
-          setLocation(`${latitude}, ${longitude}`);
-          toast.warning('Found coordinates but failed to fetch address name.');
-        } finally {
-          setFetchingLocation(false);
-        }
-      },
-      (error) => {
-        toast.error('Failed to get location. Please check permissions.');
-        setFetchingLocation(false);
-      }
-    );
   };
 
   const handleSubmit = async (e) => {
@@ -130,27 +113,26 @@ const ProfileSetup = () => {
 
           {/* Location Section */}
           <div className="space-y-3">
-            <label className="block text-sm font-bold text-muted-foreground uppercase tracking-widest pl-1">
-              Your Primary Location
+            <label className="block text-sm font-bold text-muted-foreground uppercase tracking-widest pl-1 flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-primary" /> Your Primary Location
             </label>
             <div className="relative group">
-              <input
-                type="text"
-                placeholder="Click the button to fetch location..."
-                className="w-full px-4 py-3 bg-white/40 border border-border rounded-xl focus:ring-2 focus:ring-primary/30 outline-none transition-all pr-12 text-sm"
-                value={location}
+              <select
+                className="w-full px-4 py-3 bg-white/40 border border-border rounded-xl focus:ring-2 focus:ring-primary/30 outline-none transition-all text-sm appearance-none cursor-pointer text-foreground font-semibold"
+                value={JAMSHEDPUR_AREAS.includes(location) ? location : ''}
                 onChange={(e) => setLocation(e.target.value)}
                 required
-              />
-              <button
-                type="button"
-                onClick={getRealTimeLocation}
-                disabled={fetchingLocation}
-                className="absolute right-2 top-1.5 p-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-                title="Get Real-time Location"
               >
-                {fetchingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-              </button>
+                <option value="" disabled className="text-muted-foreground font-normal">-- Select your area in Jamshedpur --</option>
+                {JAMSHEDPUR_AREAS.map((area) => (
+                  <option key={area} value={area} className="text-black bg-white font-medium">
+                    {area}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
+                <ChevronDown className="h-4 w-4" />
+              </div>
             </div>
             <p className="text-[10px] text-muted-foreground pl-1">
               * This helps us identify your area for waste collection priority in Jamshedpur.

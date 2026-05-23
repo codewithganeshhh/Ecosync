@@ -1,9 +1,25 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Camera, MapPin, Check } from 'lucide-react';
+import { Camera, MapPin, Check, ChevronDown } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
+
+const JAMSHEDPUR_AREAS = [
+  'Sakchi',
+  'Mango',
+  'Azad Basti',
+  'Dimna',
+  'Bistupur',
+  'Kadma',
+  'Sonari',
+  'Golmuri',
+  'Jugsalai',
+  'Telco',
+  'Baridih',
+  'Sidhgora',
+  'Adityapur'
+];
 
 const ReportWaste = () => {
   const navigate = useNavigate();
@@ -11,7 +27,8 @@ const ReportWaste = () => {
   const [formData, setFormData] = useState({
     wasteType: 'general',
     description: '',
-    location: '',
+    selectedArea: '',
+    preciseLocation: '',
     reportingCoordinates: null
   });
   const [imageFile, setImageFile] = useState(null);
@@ -33,8 +50,21 @@ const ReportWaste = () => {
         const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
         const data = await res.json();
         if (data.display_name) {
-          setFormData(prev => ({ ...prev, location: data.display_name }));
-          toast.success("Location synchronized!");
+          const displayName = data.display_name;
+          const displayNameLower = displayName.toLowerCase();
+          const matchedArea = JAMSHEDPUR_AREAS.find(area => displayNameLower.includes(area.toLowerCase()));
+          
+          setFormData(prev => ({
+            ...prev,
+            preciseLocation: displayName,
+            selectedArea: matchedArea || prev.selectedArea
+          }));
+          
+          if (matchedArea) {
+            toast.success(`Location synchronized: ${matchedArea}!`);
+          } else {
+            toast.success("Location synchronized! Please select your general area manually.");
+          }
         }
       } catch (err) {
         toast.warn("GPS coordinates captured, but failed to fetch address name.");
@@ -65,7 +95,7 @@ const ReportWaste = () => {
       return toast.warn("Please wait for evidence processing to complete.");
     }
 
-    if (!formData.location || !formData.description) {
+    if (!formData.selectedArea || !formData.preciseLocation || !formData.description) {
       toast.error("Please fill in all required fields!");
       return;
     }
@@ -75,7 +105,9 @@ const ReportWaste = () => {
       const payload = new FormData();
       payload.append('wasteType', formData.wasteType);
       payload.append('description', formData.description);
-      payload.append('location', formData.location);
+      
+      const combinedLocation = `${formData.selectedArea} - ${formData.preciseLocation}`;
+      payload.append('location', combinedLocation);
       if (formData.reportingCoordinates) {
         // Send as JSON string since FormData only takes strings/blobs
         payload.append('reportingCoordinates', JSON.stringify(formData.reportingCoordinates));
@@ -130,8 +162,31 @@ const ReportWaste = () => {
               </div>
               
               <div>
+                <label className="block text-sm font-medium mb-1">Area / Neighborhood*</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground z-10" />
+                  <select 
+                    className="w-full pl-10 pr-10 py-2 bg-white/50 dark:bg-black/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none cursor-pointer text-sm font-semibold"
+                    value={JAMSHEDPUR_AREAS.includes(formData.selectedArea) ? formData.selectedArea : ''}
+                    onChange={(e) => setFormData({...formData, selectedArea: e.target.value})}
+                    required
+                  >
+                    <option value="" disabled className="text-muted-foreground font-normal">-- Select Area --</option>
+                    {JAMSHEDPUR_AREAS.map((area) => (
+                      <option key={area} value={area} className="text-black bg-white font-medium">
+                        {area}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
+                    <ChevronDown className="h-4 w-4" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
                 <div className="flex justify-between items-center mb-1">
-                   <label className="block text-sm font-medium">Precise Location*</label>
+                   <label className="block text-sm font-medium">Precise Location / Landmark*</label>
                    <button 
                      type="button"
                      onClick={getLocation}
@@ -142,13 +197,12 @@ const ReportWaste = () => {
                    </button>
                 </div>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                   <input 
                     type="text" 
-                    placeholder="E.g., Sakchi Market, Near Jubilee Park Gate"
-                    className="w-full pl-10 pr-4 py-2 bg-white/50 dark:bg-black/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    placeholder="E.g., Near Main Gate, behind market"
+                    className="w-full px-4 py-2 bg-white/50 dark:bg-black/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+                    value={formData.preciseLocation}
+                    onChange={(e) => setFormData({...formData, preciseLocation: e.target.value})}
                     required
                   />
                 </div>
