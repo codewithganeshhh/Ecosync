@@ -11,8 +11,25 @@ import { motion as m } from 'framer-motion';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 
+const AREA_COORDINATES = {
+  'sakchi': [22.8015, 86.2029],
+  'mango': [22.8256, 86.2096],
+  'azad basti': [22.8242, 86.2163],
+  'dimna': [22.8398, 86.2302],
+  'bistupur': [22.7981, 86.1772],
+  'kadma': [22.7988, 86.1481],
+  'sonari': [22.8124, 86.1558],
+  'golmuri': [22.7978, 86.2209],
+  'jugsalai': [22.7761, 86.1899],
+  'telco': [22.7842, 86.2558],
+  'baridih': [22.8094, 86.2483],
+  'sidhgora': [22.8078, 86.2292],
+  'adityapur': [22.7833, 86.1567]
+};
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [reports, setReports] = useState([]);
   const [pickups, setPickups] = useState([]);
   const [users, setUsers] = useState([]);
@@ -23,21 +40,26 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [assigningTo, setAssigningTo] = useState(null);
+  const [announcementMessage, setAnnouncementMessage] = useState('');
+  const [announcementType, setAnnouncementType] = useState('info');
+  const [activeAnnouncement, setActiveAnnouncement] = useState(null);
 
   const fetchData = async () => {
     try {
-      const [reportsRes, pickupsRes, usersRes, statsRes, driversRes] = await Promise.all([
+      const [reportsRes, pickupsRes, usersRes, statsRes, driversRes, activeAnnounceRes] = await Promise.all([
         api.get('/waste/all'),
         api.get('/pickup/all'),
         api.get('/user/all'),
         api.get('/stats/dashboard'),
-        api.get('/user/drivers')
+        api.get('/user/drivers'),
+        api.get('/announcements/active').catch(() => ({ data: null }))
       ]);
       setReports(reportsRes.data);
       setPickups(pickupsRes.data);
       setUsers(usersRes.data);
       setStats(statsRes.data);
       setDrivers(driversRes.data);
+      setActiveAnnouncement(activeAnnounceRes.data);
     } catch (error) {
       toast.error('Failed to synchronize command center data');
     } finally {
@@ -48,6 +70,130 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (window.L) {
+      setMapLoaded(true);
+      return;
+    }
+    const cssLink = document.createElement('link');
+    cssLink.rel = 'stylesheet';
+    cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(cssLink);
+
+    const jsScript = document.createElement('script');
+    jsScript.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    jsScript.onload = () => setMapLoaded(true);
+    document.body.appendChild(jsScript);
+  }, []);
+
+  useEffect(() => {
+    if (!mapLoaded || activeTab !== 'overview' || loading) return;
+
+    const map = window.L.map('admin-map').setView([22.8046, 86.2029], 13);
+
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    reports.forEach((report) => {
+      let lat = null;
+      let lng = null;
+
+      if (report.reportingCoordinates && report.reportingCoordinates.lat && report.reportingCoordinates.lng) {
+        lat = report.reportingCoordinates.lat;
+        lng = report.reportingCoordinates.lng;
+      } else if (report.location) {
+        const locLower = report.location.toLowerCase();
+        const matchedKey = Object.keys(AREA_COORDINATES).find(key => locLower.includes(key));
+        if (matchedKey) {
+          [lat, lng] = AREA_COORDINATES[matchedKey];
+        }
+      }
+
+      if (lat && lng) {
+        const colorMap = {
+          'pending': '#ef4444',     // Red
+          'assigned': '#3b82f6',    // Blue
+          'cleaned': '#a855f7',     // Purple
+          'completed': '#22c55e',   // Green
+          'rejected': '#ef4444'     // Red
+        };
+        const color = colorMap[report.status] || '#ef4444';
+
+        const icon = window.L.divIcon({
+          html: `<div class="relative flex items-center justify-center" style="width: 20px; height: 20px;">
+                   <span class="animate-ping absolute inline-flex h-6 w-6 rounded-full opacity-75" style="background-color: ${color};"></span>
+                   <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white shadow-md" style="background-color: ${color};"></span>
+                 </div>`,
+          className: 'bg-transparent border-transparent',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+
+        const popupContent = `
+          <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; min-width: 150px;">
+            <p style="margin: 0 0 5px; font-weight: bold; color: #10b981;">Case #${report._id.slice(-6).toUpperCase()}</p>
+            <p style="margin: 0 0 5px;"><b>Type:</b> ${report.wasteType.toUpperCase()}</p>
+            <p style="margin: 0 0 5px;"><b>Location:</b> ${report.location.split(',')[0]}</p>
+            <p style="margin: 0; font-weight: bold; color: #6b7280;">Status: <span style="text-transform: uppercase;">${report.status}</span></p>
+          </div>
+        `;
+
+        window.L.marker([lat, lng], { icon })
+          .bindPopup(popupContent)
+          .addTo(map);
+      }
+    });
+
+    pickups.forEach((pickup) => {
+      let lat = null;
+      let lng = null;
+
+      if (pickup.coordinates && pickup.coordinates.lat && pickup.coordinates.lng) {
+        lat = pickup.coordinates.lat;
+        lng = pickup.coordinates.lng;
+      } else if (pickup.location) {
+        const locLower = pickup.location.toLowerCase();
+        const matchedKey = Object.keys(AREA_COORDINATES).find(key => locLower.includes(key));
+        if (matchedKey) {
+          [lat, lng] = AREA_COORDINATES[matchedKey];
+        }
+      }
+
+      if (lat && lng) {
+        const color = pickup.status === 'completed' ? '#22c55e' : '#eab308'; // Green or Yellow
+
+        const icon = window.L.divIcon({
+          html: `<div class="relative flex items-center justify-center" style="width: 20px; height: 20px;">
+                   <span class="animate-ping absolute inline-flex h-6 w-6 rounded-full opacity-75" style="background-color: ${color};"></span>
+                   <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white shadow-md" style="background-color: ${color};"></span>
+                 </div>`,
+          className: 'bg-transparent border-transparent',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+
+        const popupContent = `
+          <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; min-width: 150px;">
+            <p style="margin: 0 0 5px; font-weight: bold; color: #eab308;">Pickup Request</p>
+            <p style="margin: 0 0 5px;"><b>Citizen:</b> ${pickup.userId?.name || 'Unknown'}</p>
+            <p style="margin: 0 0 5px;"><b>Date:</b> ${new Date(pickup.preferredDate).toLocaleDateString()}</p>
+            <p style="margin: 0 0 5px;"><b>Location:</b> ${pickup.location.split(',')[0]}</p>
+            <p style="margin: 0; font-weight: bold; color: #6b7280;">Status: <span style="text-transform: uppercase;">${pickup.status}</span></p>
+          </div>
+        `;
+
+        window.L.marker([lat, lng], { icon })
+          .bindPopup(popupContent)
+          .addTo(map);
+      }
+    });
+
+    return () => {
+      map.remove();
+    };
+  }, [mapLoaded, activeTab, loading, reports, pickups]);
 
   const handleUpdateStatus = async (type, id, status) => {
     try {
@@ -82,6 +228,35 @@ const AdminDashboard = () => {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete user');
+    }
+  };
+
+  const handlePublishAnnouncement = async (e) => {
+    e.preventDefault();
+    if (!announcementMessage.trim()) {
+      toast.warn('Please type an announcement message');
+      return;
+    }
+    try {
+      const { data } = await api.post('/announcements', {
+        message: announcementMessage,
+        type: announcementType
+      });
+      toast.success('Broadcast announcement published');
+      setActiveAnnouncement(data);
+      setAnnouncementMessage('');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to publish announcement');
+    }
+  };
+
+  const handleClearAnnouncement = async () => {
+    try {
+      await api.put('/announcements/clear');
+      toast.success('Active announcement cleared');
+      setActiveAnnouncement(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to clear announcement');
     }
   };
 
@@ -194,6 +369,38 @@ const AdminDashboard = () => {
               <StatCard label="Pending Pickups" value={stats.pendingPickups} icon={Clock} color="yellow" />
               <StatCard label="Resolution Rate" value={`${Math.round((stats.completedReports / (stats.totalReports || 1)) * 100)}%`} icon={CheckCircle2} color="green" />
               
+              {/* Live Dispatch Map */}
+              <div className="lg:col-span-4 glass p-6 rounded-3xl border border-border space-y-4">
+                 <h3 className="text-xl font-bold flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-primary animate-bounce" /> Live Dispatch Map (Jamshedpur)
+                 </h3>
+                 <div id="admin-map" className="w-full h-[400px] rounded-2xl overflow-hidden border border-border relative z-10" />
+                 
+                 {/* Map Legend */}
+                 <div className="flex flex-wrap items-center justify-center gap-6 pt-4 border-t border-border/40 text-xs font-bold">
+                   <div className="flex items-center gap-2">
+                     <span className="w-3 h-3 rounded-full bg-red-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                     <span className="text-muted-foreground">Pending Waste Report</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <span className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                     <span className="text-muted-foreground">Crew Dispatched</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <span className="w-3 h-3 rounded-full bg-purple-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                     <span className="text-muted-foreground">Cleaned (Pending Review)</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <span className="w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                     <span className="text-muted-foreground">Completed Cleanup</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                     <span className="w-3 h-3 rounded-full bg-yellow-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                     <span className="text-muted-foreground">Scheduled Pickup</span>
+                   </div>
+                 </div>
+              </div>
+              
               <div className="lg:col-span-3 glass p-8 rounded-3xl border border-border">
                 <h3 className="text-xl font-bold mb-6">Waste Distribution</h3>
                 <div className="flex flex-wrap gap-4">
@@ -247,6 +454,76 @@ const AdminDashboard = () => {
                 <div className="flex gap-1 mt-4">
                   {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1.5 h-6 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.1}s` }} />)}
                 </div>
+              </div>
+
+              {/* Broadcast Center Widget */}
+              <div className="lg:col-span-3 glass p-8 rounded-3xl border border-border flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-5 h-5 text-primary" /> City-Wide Broadcast Center
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-6">Publish alerts or announcements that show up instantly for citizens & drivers.</p>
+
+                  <form onSubmit={handlePublishAnnouncement} className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Announcement Message</label>
+                      <textarea
+                        value={announcementMessage}
+                        onChange={(e) => setAnnouncementMessage(e.target.value)}
+                        placeholder="e.g., Weather Alert: Rain in Mango may delay afternoon pickup schedules"
+                        rows={2}
+                        className="w-full bg-primary/5 border border-border rounded-xl p-3 text-xs focus:outline-none focus:border-primary/50 text-foreground resize-none"
+                      />
+                    </div>
+
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <label className="block text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-2">Alert Severity</label>
+                        <select
+                          value={announcementType}
+                          onChange={(e) => setAnnouncementType(e.target.value)}
+                          className="w-full bg-primary/5 border border-border rounded-xl p-2.5 text-xs text-foreground focus:outline-none focus:border-primary/50 font-bold"
+                        >
+                          <option value="info" className="bg-background text-foreground font-semibold">Info (Blue Banner)</option>
+                          <option value="warning" className="bg-background text-foreground font-semibold">Warning (Yellow Banner)</option>
+                          <option value="alert" className="bg-background text-foreground font-semibold">Alert (Red Banner)</option>
+                        </select>
+                      </div>
+                      <div className="flex items-end">
+                        <button
+                          type="submit"
+                          className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-xs hover:shadow-lg hover:shadow-primary/20 transition-all"
+                        >
+                          Publish Alert
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+
+                {activeAnnouncement && (
+                  <div className="mt-6 pt-6 border-t border-border/40 flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`w-2 h-2 rounded-full animate-pulse ${
+                          activeAnnouncement.type === 'alert' ? 'bg-red-500' :
+                          activeAnnouncement.type === 'warning' ? 'bg-yellow-500' :
+                          'bg-blue-500'
+                        }`} />
+                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                          Active Broadcast ({activeAnnouncement.type})
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold truncate text-foreground">{activeAnnouncement.message}</p>
+                    </div>
+                    <button
+                      onClick={handleClearAnnouncement}
+                      className="px-3 py-1.5 bg-red-500/10 text-red-500 rounded-lg font-black text-[10px] uppercase border border-red-500/20 hover:bg-red-500/20 transition-all flex-shrink-0"
+                    >
+                      Clear Broadcast
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -422,31 +699,31 @@ const AdminDashboard = () => {
                           <StatusBadge status={report.status} />
                         </td>
                         <td className="p-5 text-right flex justify-end gap-2 items-center">
-                          {report.status === 'pending' ? (
+                          {report.image && (
+                            <button onClick={() => setViewImage(report.image)} className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-all" title="View Evidence">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {report.status !== 'completed' && report.status !== 'rejected' && (
                             <button 
                               onClick={() => setAssigningTo(report)}
-                              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-bold shadow-md hover:shadow-primary/20 transition-all flex items-center gap-1"
+                              className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold shadow-md hover:shadow-primary/20 transition-all flex items-center gap-1"
+                              title="Assign Driver"
                             >
-                              <Truck className="w-3 h-3" /> Assign Crew
+                              <Truck className="w-3 h-3" /> Assign
                             </button>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                               {report.image && (
-                                <button onClick={() => setViewImage(report.image)} className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-all">
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                              )}
-                              <select 
-                                value={report.status}
-                                onChange={(e) => handleUpdateStatus('report', report._id, e.target.value)}
-                                className="text-xs border border-border bg-white dark:bg-black rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-primary outline-none"
-                              >
-                                {['pending', 'assigned', 'cleaned', 'completed', 'rejected'].map(s => (
-                                  <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
-                                ))}
-                              </select>
-                            </div>
                           )}
+
+                          <select 
+                            value={report.status}
+                            onChange={(e) => handleUpdateStatus('report', report._id, e.target.value)}
+                            className="text-xs border border-border bg-white dark:bg-black rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-primary outline-none cursor-pointer font-bold"
+                          >
+                            {['pending', 'assigned', 'cleaned', 'completed', 'rejected'].map(s => (
+                              <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                            ))}
+                          </select>
                         </td>
                       </tr>
                     ))}

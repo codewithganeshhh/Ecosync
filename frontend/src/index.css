@@ -79,3 +79,9 @@
 .glass {
   @apply bg-white/70 dark:bg-black/70 backdrop-blur-md border border-white/20 shadow-xl;
 }
+
+/* Fix Leaflet default styles for custom div icons */
+.leaflet-div-icon {
+  background: transparent !important;
+  border: none !important;
+}

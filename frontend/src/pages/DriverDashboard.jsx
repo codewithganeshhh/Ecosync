@@ -4,7 +4,7 @@ import {
   Truck, MapPin, Camera, CheckCircle2, 
   ExternalLink, Clock, AlertCircle, Image as ImageIcon,
   User, ClipboardCheck, ArrowRight, ShieldCheck, Settings2,
-  Fuel, Zap, Star, Activity, Bell
+  Fuel, Zap, Star, Activity, Bell, Info, XCircle
 } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
@@ -15,6 +15,8 @@ const DriverDashboard = () => {
   const [uploading, setUploading] = useState(null); // ID of task being uploaded
   const [previewImage, setPreviewImage] = useState(null);
   const [activeTrafficZones, setActiveTrafficZones] = useState([]);
+  const [activeAnnouncement, setActiveAnnouncement] = useState(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const fetchTasks = async () => {
     try {
@@ -27,8 +29,24 @@ const DriverDashboard = () => {
     }
   };
 
+  const fetchActiveAnnouncement = async () => {
+    try {
+      const { data } = await api.get('/announcements/active');
+      if (data) {
+        setActiveAnnouncement(data);
+        const dismissedId = sessionStorage.getItem(`dismissed_announcement_${data._id}`);
+        if (dismissedId) {
+          setBannerDismissed(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch active announcement');
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
+    fetchActiveAnnouncement();
 
     // Simulation: Real-time Traffic Pulse
     const interval = setInterval(() => {
@@ -140,6 +158,65 @@ const DriverDashboard = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 space-y-12 min-h-screen">
+      {/* Broadcast Announcement Banner */}
+      {activeAnnouncement && !bannerDismissed && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`relative overflow-hidden rounded-[2rem] border p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl transition-all ${
+            activeAnnouncement.type === 'alert'
+              ? 'bg-red-500/10 border-red-500/20 text-red-200 shadow-red-500/5'
+              : activeAnnouncement.type === 'warning'
+              ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-200 shadow-yellow-500/5'
+              : 'bg-blue-500/10 border-blue-500/20 text-blue-200 shadow-blue-500/5'
+          }`}
+        >
+          {/* Glowing accent border/light effect */}
+          <div className={`absolute top-0 left-0 w-1.5 h-full ${
+            activeAnnouncement.type === 'alert' ? 'bg-red-500 shadow-[0_0_20px_#ef4444]' :
+            activeAnnouncement.type === 'warning' ? 'bg-yellow-500 shadow-[0_0_20px_#eab308]' :
+            'bg-blue-500 shadow-[0_0_20px_#3b82f6]'
+          }`} />
+
+          <div className="flex items-center gap-4 flex-1">
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+              activeAnnouncement.type === 'alert' ? 'bg-red-500/20 text-red-400' :
+              activeAnnouncement.type === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
+              'bg-blue-500/20 text-blue-400'
+            }`}>
+              <Info className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${
+                  activeAnnouncement.type === 'alert' ? 'text-red-400' :
+                  activeAnnouncement.type === 'warning' ? 'text-yellow-400' :
+                  'text-blue-400'
+                }`}>
+                  City Broadcast Bulletin
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-current animate-ping" />
+              </div>
+              <p className="text-sm font-bold leading-relaxed">{activeAnnouncement.message}</p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              sessionStorage.setItem(`dismissed_announcement_${activeAnnouncement._id}`, 'true');
+              setBannerDismissed(true);
+            }}
+            className={`p-2 rounded-xl transition-all border ${
+              activeAnnouncement.type === 'alert' ? 'border-red-500/10 hover:bg-red-500/20 text-red-400' :
+              activeAnnouncement.type === 'warning' ? 'border-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400' :
+              'border-blue-500/10 hover:bg-blue-500/20 text-blue-400'
+            }`}
+          >
+            <XCircle className="w-5 h-5" />
+          </button>
+        </motion.div>
+      )}
+
       {/* Top Advisory Strip */}
       <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl px-6 py-3 flex items-center justify-between overflow-hidden relative group">
         <div className="flex items-center gap-4 text-orange-500 font-black text-[10px] uppercase tracking-[0.2em]">

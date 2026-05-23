@@ -10,6 +10,7 @@ const userRoutes = require('./routes/userRoutes');
 const wasteRoutes = require('./routes/wasteRoutes');
 const pickupRoutes = require('./routes/pickupRoutes');
 const statsRoutes = require('./routes/statsRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/waste', wasteRoutes);
 app.use('/api/pickup', pickupRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Error Handling Middleware
 app.use(notFound);
