@@ -4,7 +4,7 @@ import {
   Truck, MapPin, Camera, CheckCircle2, 
   ExternalLink, Clock, AlertCircle, Image as ImageIcon,
   User, ClipboardCheck, ArrowRight, ShieldCheck, Settings2,
-  Fuel, Zap, Star, Activity, Bell, Info, XCircle
+  Fuel, Zap, Star, Activity, Bell, Info
 } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
