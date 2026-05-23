@@ -15,7 +15,7 @@ const Counter = ({ value, suffix = "" }) => {
 
     let totalDuration = 1200; // 1.2 seconds duration
     let increment = Math.ceil(end / (totalDuration / 16));
-    
+
     let timer = setInterval(() => {
       start += increment;
       if (start >= end) {
@@ -91,7 +91,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col min-h-screen font-sans overflow-x-hidden bg-[#fafcfa] text-foreground">
-      
+
       {/* 1. Hero Section */}
       <section className="relative px-6 lg:px-8 pt-12 pb-24 sm:pt-16 sm:pb-32 flex items-center justify-center min-h-[85vh]">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-background to-background"></div>
@@ -99,7 +99,7 @@ const Home = () => {
         <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-primary/10 rounded-full blur-[120px] -z-10 mix-blend-multiply"></div>
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -129,7 +129,7 @@ const Home = () => {
           </motion.div>
 
           {/* Hero Visual Abstract Representation */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.2 }}
@@ -137,16 +137,16 @@ const Home = () => {
           >
             <div className="absolute inset-0 glass rounded-[3rem] border border-white/20 transform rotate-3 z-0"></div>
             <div className="absolute inset-0 rounded-[3rem] transform -rotate-3 z-10 shadow-2xl overflow-hidden border border-white/20 group">
-              <img 
-                src={jamshedpurImage} 
-                alt="Jamshedpur City" 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+              <img
+                src={jamshedpurImage}
+                alt="Jamshedpur City"
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
               />
             </div>
-            
+
             {/* Floating Glass Cards */}
-            <motion.div 
-              animate={{ y: [-10, 10, -10] }} 
+            <motion.div
+              animate={{ y: [-10, 10, -10] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
               className="absolute -left-12 top-24 glass p-4 rounded-xl flex items-center gap-4 shadow-xl z-20 border border-white/40 backdrop-blur-xl"
             >
@@ -157,8 +157,8 @@ const Home = () => {
               </div>
             </motion.div>
 
-            <motion.div 
-              animate={{ y: [10, -10, 10] }} 
+            <motion.div
+              animate={{ y: [10, -10, 10] }}
               transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
               className="absolute -right-8 bottom-32 glass p-4 rounded-xl flex items-center gap-4 shadow-xl z-20 border border-white/40 backdrop-blur-xl"
             >
@@ -172,12 +172,41 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Partners Trust Logo Marquee */}
+      <section className="py-8 bg-white/40 border-b border-neutral-200/50 overflow-hidden relative backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-8 flex-wrap md:flex-nowrap">
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400 whitespace-nowrap">
+            Civic Partners & Utilities
+          </div>
+          <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]">
+            <div className="animate-marquee flex gap-16 py-2">
+              {[1, 2, 3].map((loopIndex) => (
+                <React.Fragment key={loopIndex}>
+                  <div className="text-zinc-500 hover:text-zinc-800 transition-colors font-extrabold text-xs tracking-widest uppercase flex items-center gap-2.5 select-none whitespace-nowrap">
+                    <span className="w-2.5 h-2.5 rounded-full bg-primary" /> JNAC Municipal Corp
+                  </div>
+                  <div className="text-zinc-500 hover:text-zinc-800 transition-colors font-extrabold text-xs tracking-widest uppercase flex items-center gap-2.5 select-none whitespace-nowrap">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500" /> Tata Steel Utilities (JUSCO)
+                  </div>
+                  <div className="text-zinc-500 hover:text-zinc-800 transition-colors font-extrabold text-xs tracking-widest uppercase flex items-center gap-2.5 select-none whitespace-nowrap">
+                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Jharkhand City Command
+                  </div>
+                  <div className="text-zinc-500 hover:text-zinc-800 transition-colors font-extrabold text-xs tracking-widest uppercase flex items-center gap-2.5 select-none whitespace-nowrap">
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" /> Swachh Bharat JSR
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 2. Global Impact Stats */}
       <section className="border-y border-emerald-500/5 bg-[#f3f7f3]/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, idx) => (
-              <motion.div 
+              <motion.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -198,12 +227,12 @@ const Home = () => {
       {/* 3. Dynamic Eco-Impact Calculator Widget */}
       <section className="py-24 px-6 lg:px-8 max-w-7xl mx-auto relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] bg-primary/5 rounded-[5rem] blur-[120px] -z-10"></div>
-        
+
         <div className="flex flex-col lg:flex-row gap-12 items-center bg-white p-8 md:p-16 rounded-[3.5rem] border border-emerald-500/10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] relative overflow-hidden">
           {/* Layered Corner Gradients inside card (behind text but above card bg) */}
           <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-emerald-500/10 to-transparent rounded-bl-[100px] z-0 pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-primary/5 to-transparent rounded-tr-[100px] z-0 pointer-events-none"></div>
-          
+
           <div className="lg:w-1/2 text-left relative z-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 mb-6 border border-emerald-500/20 font-bold text-sm">
               <Sparkles className="w-4 h-4" /> Live Impact Estimator
@@ -222,13 +251,13 @@ const Home = () => {
                   <span>Plastic Waste Recycled</span>
                   <span className="text-primary">{plastic} kg</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={plastic} 
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={plastic}
                   onChange={(e) => setPlastic(Number(e.target.value))}
-                  className="w-full h-2 bg-neutral-100 rounded-lg appearance-none cursor-pointer accent-primary border border-neutral-200" 
+                  className="w-full h-2 bg-neutral-100 rounded-lg appearance-none cursor-pointer accent-primary border border-neutral-200"
                 />
               </div>
 
@@ -237,13 +266,13 @@ const Home = () => {
                   <span>Organic & Kitchen Waste</span>
                   <span className="text-emerald-500">{organic} kg</span>
                 </div>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="200" 
-                  value={organic} 
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  value={organic}
                   onChange={(e) => setOrganic(Number(e.target.value))}
-                  className="w-full h-2 bg-neutral-100 rounded-lg appearance-none cursor-pointer accent-emerald-500 border border-neutral-200" 
+                  className="w-full h-2 bg-neutral-100 rounded-lg appearance-none cursor-pointer accent-emerald-500 border border-neutral-200"
                 />
               </div>
             </div>
@@ -287,7 +316,7 @@ const Home = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map((feature, idx) => (
-            <motion.div 
+            <motion.div
               key={idx}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -309,20 +338,20 @@ const Home = () => {
       <section className="py-24 bg-primary/5 border-t border-border mt-12 relative overflow-hidden">
         <div className="absolute right-0 top-0 w-1/3 h-full bg-primary/10 rounded-l-full blur-[150px] -z-10"></div>
         <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row items-center gap-16">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="md:w-1/2"
           >
-            <h2 className="text-4xl font-extrabold mb-6">Built for the community. <br/>Driven by you.</h2>
+            <h2 className="text-4xl font-extrabold mb-6">Built for the community. <br />Driven by you.</h2>
             <p className="text-lg text-muted-foreground mb-6">
               When citizens are equipped with the right digital tools, keeping the environment clean shifts from a chore to a collaborative movement. Join thousands of your neighbors who are already making a visible difference.
             </p>
             <div className="flex items-center gap-4">
               <div className="flex -space-x-4">
                 {[1, 2, 3, 4].map(i => (
-                  <div key={i} className={`w-12 h-12 rounded-full border-2 border-background flex items-center justify-center text-white font-bold bg-primary`} style={{ opacity: 1 - (i*0.1) }}>
+                  <div key={i} className={`w-12 h-12 rounded-full border-2 border-background flex items-center justify-center text-white font-bold bg-primary`} style={{ opacity: 1 - (i * 0.1) }}>
                     <Users className="w-5 h-5" />
                   </div>
                 ))}
@@ -334,22 +363,22 @@ const Home = () => {
             </div>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="md:w-1/2 w-full"
           >
             <div className="glass p-8 rounded-3xl border border-white/20 shadow-2xl relative">
-               <div className="absolute -top-6 -right-6 w-20 h-20 bg-primary rounded-full blur-[30px]"></div>
-               <h3 className="text-2xl font-bold mb-4">"The app transformed our neighborhood. What used to take weeks to clean up now takes 24 hours."</h3>
-               <div className="flex items-center gap-4 mt-8">
-                 <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center"><UserIcon /></div>
-                 <div>
-                   <p className="font-bold text-foreground">Sarah Jenkins</p>
-                   <p className="text-sm text-muted-foreground">Community Leader</p>
-                 </div>
-               </div>
+              <div className="absolute -top-6 -right-6 w-20 h-20 bg-primary rounded-full blur-[30px]"></div>
+              <h3 className="text-2xl font-bold mb-4">"The app transformed our neighborhood. What used to take weeks to clean up now takes 24 hours."</h3>
+              <div className="flex items-center gap-4 mt-8">
+                <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center"><UserIcon /></div>
+                <div>
+                  <p className="font-bold text-foreground">Sarah Jenkins</p>
+                  <p className="text-sm text-muted-foreground">Community Leader</p>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -366,7 +395,7 @@ const Home = () => {
 
         <div className="space-y-4">
           {faqs.map((faq, idx) => (
-            <div 
+            <div
               key={idx}
               className="glass rounded-2xl border border-border/50 overflow-hidden transition-all duration-300"
             >
@@ -402,6 +431,6 @@ const Home = () => {
 };
 
 // Mini internal icon helper for the testimonial
-const UserIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+const UserIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>;
 
 export default Home;

@@ -7,6 +7,8 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import ChatWidget from './components/ChatWidget';
+
 
 // Lazy loaded pages
 const Home = lazy(() => import('./pages/Home'));
@@ -61,6 +63,7 @@ function App() {
           </main>
           <Footer />
           <ToastContainer position="bottom-right" theme="colored" />
+          <ChatWidget />
         </Router>
       </AuthProvider>
     </div>

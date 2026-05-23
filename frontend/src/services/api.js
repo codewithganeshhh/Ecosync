@@ -18,7 +18,7 @@ api.interceptors.response.use(
   async (error) => {
     // If no response (server down), enhance the error message
     if (!error.response) {
-      error.customMessage = `Network Error: ${error.message}. Url: ${config.url}`;
+      error.customMessage = `Network Error: ${error.message}. Url: ${error.config?.url}`;
       console.error('Network Error detected! error:', error);
     }
     return Promise.reject(error);

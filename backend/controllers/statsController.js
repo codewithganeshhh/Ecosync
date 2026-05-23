@@ -10,12 +10,12 @@ const getDashboardStats = async (req, res) => {
     const totalUsers = await User.countDocuments({});
     const totalReports = await WasteReport.countDocuments({});
     const totalPickups = await PickupRequest.countDocuments({});
-    
+
     const pendingReports = await WasteReport.countDocuments({ status: 'pending' });
     const assignedReports = await WasteReport.countDocuments({ status: 'assigned' });
     const cleanedReports = await WasteReport.countDocuments({ status: 'cleaned' });
     const completedReports = await WasteReport.countDocuments({ status: 'completed' });
-    
+
     const pendingPickups = await PickupRequest.countDocuments({ status: 'pending' });
     const completedPickups = await PickupRequest.countDocuments({ status: 'completed' });
 
