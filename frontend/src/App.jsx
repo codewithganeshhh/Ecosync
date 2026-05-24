@@ -25,6 +25,7 @@ const Legacy = lazy(() => import('./pages/Legacy'));
 const Contact = lazy(() => import('./pages/Contact'));
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
 const DriverDashboard = lazy(() => import('./pages/DriverDashboard'));
+const MyCases = lazy(() => import('./pages/MyCases'));
 
 // Simple loading spinner
 const PageLoader = () => (
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/setup-profile" element={<ProtectedRoute><ProfileSetup /></ProtectedRoute>} />
                 
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/my-cases" element={<ProtectedRoute><MyCases /></ProtectedRoute>} />
                 <Route path="/report-waste" element={<ProtectedRoute><ReportWaste /></ProtectedRoute>} />
                 <Route path="/pickup-request" element={<ProtectedRoute><PickupRequest /></ProtectedRoute>} />
                 
