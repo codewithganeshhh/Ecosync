@@ -45,6 +45,12 @@ const wasteReportSchema = mongoose.Schema(
       enum: ['pending', 'assigned', 'cleaned', 'completed', 'rejected'],
       default: 'pending',
     },
+    aiAnalysis: {
+      isRecyclable: { type: Boolean, default: false },
+      recyclabilityPercentage: { type: Number, default: 0 },
+      estimatedWeightKg: { type: Number, default: 0 },
+      carbonSavedKg: { type: Number, default: 0 },
+    },
   },
   {
     timestamps: true,

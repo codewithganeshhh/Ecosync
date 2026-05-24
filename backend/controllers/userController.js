@@ -16,6 +16,9 @@ const getUserProfile = async (req, res) => {
         role: user.role,
         profilePhoto: user.profilePhoto,
         location: user.location,
+        points: user.points || 0,
+        badges: user.badges || [],
+        rewardsRedeemed: user.rewardsRedeemed || [],
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -74,6 +77,9 @@ const updateUserProfile = async (req, res) => {
         role: updatedUser.role,
         profilePhoto: updatedUser.profilePhoto,
         location: updatedUser.location,
+        points: updatedUser.points || 0,
+        badges: updatedUser.badges || [],
+        rewardsRedeemed: updatedUser.rewardsRedeemed || [],
       });
     } else {
       res.status(404).json({ message: 'User not found' });
@@ -133,4 +139,61 @@ const getDrivers = async (req, res) => {
   }
 };
 
-module.exports = { getUserProfile, updateUserProfile, getUsers, deleteUser, getDrivers };
+// @desc    Get top users by points
+// @route   GET /api/user/leaderboard
+// @access  Private
+const getLeaderboard = async (req, res) => {
+  try {
+    const topUsers = await User.find({ role: 'user' })
+      .select('name email points badges profilePhoto location')
+      .sort({ points: -1 })
+      .limit(10);
+    res.json(topUsers);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Redeem points for rewards
+// @route   POST /api/user/redeem
+// @access  Private
+const redeemReward = async (req, res) => {
+  const { rewardId, name, cost } = req.body;
+
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.points < cost) {
+      return res.status(400).json({ message: 'Insufficient EcoPoints' });
+    }
+
+    user.points -= cost;
+
+    const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const code = `ECO-JNAC-${randomHex}`;
+
+    user.rewardsRedeemed.push({
+      rewardId,
+      name,
+      cost,
+      code,
+      redeemedAt: new Date()
+    });
+
+    await user.save();
+
+    res.json({
+      message: `Successfully redeemed ${name}!`,
+      points: user.points,
+      rewardsRedeemed: user.rewardsRedeemed
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getUserProfile, updateUserProfile, getUsers, deleteUser, getDrivers, getLeaderboard, redeemReward };

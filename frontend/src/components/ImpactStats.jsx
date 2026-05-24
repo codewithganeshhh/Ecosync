@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Leaf, Award, Recycle, Activity } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 
 const ImpactStats = ({ reportsCount, pickupsCount }) => {
+  const { user } = useContext(AuthContext);
+  
   const stats = [
     {
       label: 'Eco Points',
-      value: (reportsCount * 50) + (pickupsCount * 100),
+      value: user?.points || 0,
       icon: Award,
       color: 'text-yellow-500',
       bg: 'bg-yellow-500/10',
-      description: 'Earned from your actions'
+      description: 'Your active points balance'
     },
     {
       label: 'CO2 Offset',

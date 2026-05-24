@@ -29,6 +29,26 @@ const userSchema = mongoose.Schema(
       type: String,
       default: '',
     },
+    points: {
+      type: Number,
+      default: 0,
+    },
+    badges: {
+      type: [String],
+      default: ['Eco Starter'],
+    },
+    rewardsRedeemed: [
+      {
+        rewardId: String,
+        name: String,
+        cost: Number,
+        code: String,
+        redeemedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

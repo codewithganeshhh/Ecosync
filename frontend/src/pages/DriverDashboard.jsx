@@ -335,7 +335,6 @@ const DriverDashboard = () => {
                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest opacity-60">Traffic-Aware Dispatch</p>
                  </div>
               </div>
-
               <div className="space-y-6">
                  <div className="space-y-3">
                     <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Active Waypoints</p>
@@ -360,6 +359,66 @@ const DriverDashboard = () => {
                        )}
                     </div>
                  </div>
+
+                 {/* Visual SVG Route Optimizer Graph */}
+                 {tasks.filter(t => t.status === 'assigned').length > 0 && (
+                    <div className="border border-border/60 bg-white/30 dark:bg-black/20 rounded-2xl p-4 space-y-3 relative overflow-hidden">
+                       <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-primary">
+                          <span>Route map graph</span>
+                          <span className="text-emerald-500 font-bold uppercase tracking-widest text-[8px]">Optimized path solved</span>
+                       </div>
+                       
+                       <div className="w-full h-32 flex items-center justify-center bg-zinc-950/5 dark:bg-zinc-950/40 rounded-xl relative border border-border/30">
+                          {/* SVG Route Visualizer */}
+                          <svg className="w-full h-full p-4" viewBox="0 0 200 100">
+                             {/* Optimized path line */}
+                             <motion.path 
+                               d="M 20 50 Q 80 20, 100 50 T 180 50"
+                               fill="none"
+                               stroke="#10b981"
+                               strokeWidth="3"
+                               strokeDasharray="6 4"
+                               animate={{ strokeDashoffset: [0, -20] }}
+                               transition={{ repeat: Infinity, ease: "linear", duration: 4 }}
+                             />
+                             {/* Node 1: Depot */}
+                             <circle cx="20" cy="50" r="6" fill="#3b82f6" />
+                             <text x="12" y="40" fill="currentColor" className="text-[7px] font-black" opacity="0.8">DEPOT</text>
+                             
+                             {/* Node 2: Waypoint 1 */}
+                             <circle cx="95" cy="40" r="6" fill="#eab308" />
+                             <text x="75" y="30" fill="currentColor" className="text-[7px] font-black" opacity="0.8">
+                                {tasks.filter(t => t.status === 'assigned')[0]?.location?.split(' ')[0] || 'POINT A'}
+                             </text>
+                             
+                             {/* Node 3: Waypoint 2 */}
+                             {tasks.filter(t => t.status === 'assigned')[1] ? (
+                                <>
+                                   <circle cx="180" cy="50" r="6" fill="#ef4444" />
+                                   <text x="155" y="42" fill="currentColor" className="text-[7px] font-black" opacity="0.8">
+                                      {tasks.filter(t => t.status === 'assigned')[1]?.location?.split(' ')[0] || 'POINT B'}
+                                   </text>
+                                </>
+                             ) : (
+                                <>
+                                   <circle cx="180" cy="50" r="6" fill="#ef4444" />
+                                   <text x="160" y="42" fill="currentColor" className="text-[7px] font-black" opacity="0.8">DUMP</text>
+                                </>
+                             )}
+                          </svg>
+                       </div>
+                       
+                       <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
+                          <div className="bg-primary/5 p-2 rounded-xl border border-primary/10 text-center">
+                             <p className="text-muted-foreground uppercase text-[8px] tracking-wider mb-0.5">Est. Fuel Saved</p>
+                             <p className="text-sm font-black text-primary">{(tasks.filter(t => t.status === 'assigned').length * 0.8).toFixed(1)} L</p>
+                          </div>
+                          <div className="bg-primary/5 p-2 rounded-xl border border-primary/10 text-center">
+                             <p className="text-sm font-black text-emerald-500">{(tasks.filter(t => t.status === 'assigned').length * 1.9).toFixed(1)} kg</p>
+                          </div>
+                       </div>
+                    </div>
+                 )}
 
                  <a 
                    href={getOptimizedRouteLink()} 

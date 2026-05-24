@@ -29,6 +29,9 @@ const registerUser = async (req, res) => {
         role: user.role,
         profilePhoto: user.profilePhoto || '',
         location: user.location || '',
+        points: user.points || 0,
+        badges: user.badges || [],
+        rewardsRedeemed: user.rewardsRedeemed || [],
         token: generateToken(user._id),
       });
     } else {
@@ -60,6 +63,9 @@ const loginUser = async (req, res) => {
         role: user.role,
         profilePhoto: user.profilePhoto || '',
         location: user.location || '',
+        points: user.points || 0,
+        badges: user.badges || [],
+        rewardsRedeemed: user.rewardsRedeemed || [],
         token: generateToken(user._id),
       });
     } else {
@@ -87,6 +93,9 @@ const loginAdmin = async (req, res) => {
         role: user.role,
         profilePhoto: user.profilePhoto || '',
         location: user.location || '',
+        points: user.points || 0,
+        badges: user.badges || [],
+        rewardsRedeemed: user.rewardsRedeemed || [],
         token: generateToken(user._id),
       });
     } else {

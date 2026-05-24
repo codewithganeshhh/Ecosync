@@ -48,4 +48,22 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-module.exports = { getDashboardStats };
+// @desc    Get global platform statistics (Public)
+// @route   GET /api/stats/global
+// @access  Public
+const getGlobalStats = async (req, res) => {
+  try {
+    const totalReports = await WasteReport.countDocuments({});
+    const completedReports = await WasteReport.countDocuments({ status: 'completed' });
+    const resolutionRate = totalReports > 0 ? Math.round((completedReports / totalReports) * 100) : 100;
+
+    res.json({
+      solvedCases: completedReports,
+      resolutionRate: resolutionRate
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getDashboardStats, getGlobalStats };

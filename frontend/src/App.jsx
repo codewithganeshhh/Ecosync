@@ -26,6 +26,7 @@ const Contact = lazy(() => import('./pages/Contact'));
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'));
 const DriverDashboard = lazy(() => import('./pages/DriverDashboard'));
 const MyCases = lazy(() => import('./pages/MyCases'));
+const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 
 // Simple loading spinner
 const PageLoader = () => (
@@ -57,6 +58,7 @@ function App() {
                 <Route path="/my-cases" element={<ProtectedRoute><MyCases /></ProtectedRoute>} />
                 <Route path="/report-waste" element={<ProtectedRoute><ReportWaste /></ProtectedRoute>} />
                 <Route path="/pickup-request" element={<ProtectedRoute><PickupRequest /></ProtectedRoute>} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
                 
                 <Route path="/driver/dashboard" element={<ProtectedRoute driverOnly={true}><DriverDashboard /></ProtectedRoute>} />
                 <Route path="/admin/dashboard" element={<ProtectedRoute adminOnly={true}><AdminDashboard /></ProtectedRoute>} />

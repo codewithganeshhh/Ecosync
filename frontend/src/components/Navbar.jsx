@@ -28,6 +28,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-foreground/80 hover:text-primary transition-colors font-medium">Home</Link>
             <Link to="/legacy" className="text-foreground/80 hover:text-primary transition-colors font-medium">City Legacy</Link>
+            <Link to="/leaderboard" className="text-foreground/80 hover:text-primary transition-colors font-medium">Eco Leaderboard</Link>
             <Link to="/about" className="text-foreground/80 hover:text-primary transition-colors font-medium">About</Link>
             <Link to="/contact" className="text-foreground/80 hover:text-primary transition-colors font-medium">Contact</Link>
             
@@ -99,6 +100,7 @@ const Navbar = () => {
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               <Link to="/" className="block px-3 py-2 rounded-md hover:bg-primary/10 hover:text-primary" onClick={() => setIsOpen(false)}>Home</Link>
               <Link to="/legacy" className="block px-3 py-2 rounded-md hover:bg-primary/10 hover:text-primary" onClick={() => setIsOpen(false)}>City Legacy</Link>
+              <Link to="/leaderboard" className="block px-3 py-2 rounded-md hover:bg-primary/10 hover:text-primary" onClick={() => setIsOpen(false)}>Eco Leaderboard</Link>
               <Link to="/recycling-info" className="block px-3 py-2 rounded-md hover:bg-primary/10 hover:text-primary" onClick={() => setIsOpen(false)}>Recycling Info</Link>
               <Link to="/about" className="block px-3 py-2 rounded-md hover:bg-primary/10 hover:text-primary" onClick={() => setIsOpen(false)}>About Us</Link>
               <Link to="/contact" className="block px-3 py-2 rounded-md hover:bg-primary/10 hover:text-primary" onClick={() => setIsOpen(false)}>Contact</Link>

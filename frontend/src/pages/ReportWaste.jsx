@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Camera, MapPin, Check, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, MapPin, Check, ChevronDown, Sparkles, BrainCircuit } from 'lucide-react';
 import api from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -35,6 +35,8 @@ const ReportWaste = () => {
   const [preview, setPreview] = useState('');
   const [detecting, setDetecting] = useState(false);
   const [isImageProcessing, setIsImageProcessing] = useState(false);
+  const [aiScanning, setAiScanning] = useState(false);
+  const [aiResult, setAiResult] = useState(null);
 
   const getLocation = () => {
     if (!navigator.geolocation) {
@@ -84,15 +86,42 @@ const ReportWaste = () => {
       
       setImageFile(file);
       setPreview(URL.createObjectURL(file));
+      setAiResult(null); // Reset previous scan result
       toast.info("Site evidence secured and ready.");
+    }
+  };
+
+  const handleAIScan = async () => {
+    if (!preview) {
+      return toast.warn("Please upload an image of the waste first!");
+    }
+
+    setAiScanning(true);
+    try {
+      const { data } = await api.post('/waste/analyze');
+      
+      // Delay of 2.5s to show scanner animation
+      await new Promise(resolve => setTimeout(resolve, 2500));
+
+      setFormData(prev => ({
+        ...prev,
+        wasteType: data.wasteType,
+        description: data.description
+      }));
+      setAiResult(data.aiAnalysis);
+      toast.success("AI Scan Complete! Waste type & descriptions prefilled.");
+    } catch (err) {
+      toast.error("Simulated AI scan failed. Please select details manually.");
+    } finally {
+      setAiScanning(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (isImageProcessing) {
-      return toast.warn("Please wait for evidence processing to complete.");
+    if (isImageProcessing || aiScanning) {
+      return toast.warn("Please wait for evidence processing/AI scan to complete.");
     }
 
     if (!formData.selectedArea || !formData.preciseLocation || !formData.description) {
@@ -109,7 +138,6 @@ const ReportWaste = () => {
       const combinedLocation = `${formData.selectedArea} - ${formData.preciseLocation}`;
       payload.append('location', combinedLocation);
       if (formData.reportingCoordinates) {
-        // Send as JSON string since FormData only takes strings/blobs
         payload.append('reportingCoordinates', JSON.stringify(formData.reportingCoordinates));
       }
 
@@ -117,12 +145,16 @@ const ReportWaste = () => {
         payload.append('image', imageFile);
       }
 
+      if (aiResult) {
+        payload.append('aiAnalysis', JSON.stringify(aiResult));
+      }
+
       await api.post('/waste/report', payload, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      toast.success('Waste reported successfully! Our crew has been alerted.');
+      toast.success('Waste reported successfully! +10 EcoPoints earned.');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to dispatch report');
@@ -228,6 +260,20 @@ const ReportWaste = () => {
                     <span className="text-[10px] font-black uppercase text-white tracking-widest">Securing Evidence...</span>
                   </div>
                 )}
+                {aiScanning && (
+                  <div className="absolute inset-0 bg-primary/10 flex flex-col items-center justify-center overflow-hidden">
+                    <motion.div 
+                      initial={{ y: -80 }}
+                      animate={{ y: 160 }}
+                      transition={{ repeat: Infinity, repeatType: "reverse", duration: 1.5, ease: "easeInOut" }}
+                      className="absolute left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_12px_#10b981]"
+                    />
+                    <div className="z-10 bg-black/70 px-4 py-2 rounded-xl backdrop-blur-md flex items-center gap-2 border border-primary/20 animate-pulse text-white">
+                      <BrainCircuit className="w-4 h-4 text-primary animate-spin" />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-primary">AI Running Scan...</span>
+                    </div>
+                  </div>
+                )}
                 <input 
                   type="file" 
                   accept="image/jpeg, image/png, image/webp" 
@@ -235,8 +281,51 @@ const ReportWaste = () => {
                   className="absolute inset-0 opacity-0 cursor-pointer" 
                 />
               </div>
+              {preview && (
+                <button
+                  type="button"
+                  onClick={handleAIScan}
+                  disabled={aiScanning}
+                  className="w-full mt-3 py-2.5 bg-gradient-to-r from-primary/15 to-emerald-500/15 border border-primary/20 text-primary hover:from-primary/25 hover:to-emerald-500/25 font-black text-xs tracking-widest uppercase rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50"
+                >
+                  <BrainCircuit className="w-4 h-4 text-primary" /> Run AI Analysis Scan
+                </button>
+              )}
             </div>
           </div>
+
+          {/* AI Scanner Intelligence Report Card */}
+          {aiResult && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-primary/5 dark:bg-primary/[0.02] border border-primary/20 rounded-2xl p-6 space-y-4"
+            >
+              <h4 className="text-xs font-black uppercase text-primary tracking-widest flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary animate-pulse" /> AI Scanner Intel Card
+              </h4>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white/50 dark:bg-black/30 p-3 rounded-xl border border-border flex flex-col justify-center">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase">Recyclable</span>
+                  <span className="text-sm font-black text-foreground mt-0.5">{aiResult.isRecyclable ? 'YES' : 'NO'}</span>
+                </div>
+                <div className="bg-white/50 dark:bg-black/30 p-3 rounded-xl border border-border flex flex-col justify-center">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase">Score</span>
+                  <span className="text-sm font-black text-foreground mt-0.5">{aiResult.recyclabilityPercentage}%</span>
+                </div>
+                <div className="bg-white/50 dark:bg-black/30 p-3 rounded-xl border border-border flex flex-col justify-center">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase">Est. Carbon Saved</span>
+                  <span className="text-sm font-black text-green-500 mt-0.5 flex items-center gap-0.5">
+                     {aiResult.carbonSavedKg} kg CO2
+                  </span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground border-t border-border/40 pt-3">
+                 <span>ESTIMATED WASTE VOLUME / WEIGHT</span>
+                 <span className="font-mono font-black text-foreground">{aiResult.estimatedWeightKg} kg</span>
+              </div>
+            </motion.div>
+          )}
 
           <div>
             <label className="block text-sm font-medium mb-1">Description*</label>

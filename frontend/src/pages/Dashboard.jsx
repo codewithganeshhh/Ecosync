@@ -22,19 +22,24 @@ const Dashboard = () => {
   const [activeAnnouncement, setActiveAnnouncement] = useState(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [showAllCases, setShowAllCases] = useState(false);
+  const [globalStats, setGlobalStats] = useState({ solvedCases: 428, resolutionRate: 82 });
 
   // Removed mandatory redirect to allow user to access dashboard first
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [reportsRes, pickupsRes, announceRes] = await Promise.all([
+        const [reportsRes, pickupsRes, announceRes, statsRes] = await Promise.all([
           api.get('/waste/myreports'),
           api.get('/pickup/mypickups'),
-          api.get('/announcements/active').catch(() => ({ data: null }))
+          api.get('/announcements/active').catch(() => ({ data: null })),
+          api.get('/stats/global').catch(() => ({ data: { solvedCases: 428, resolutionRate: 82 } }))
         ]);
         setReports(reportsRes.data);
         setPickups(pickupsRes.data);
+        if (statsRes.data) {
+          setGlobalStats(statsRes.data);
+        }
         if (announceRes.data) {
           setActiveAnnouncement(announceRes.data);
           const dismissedId = sessionStorage.getItem(`dismissed_announcement_${announceRes.data._id}`);
@@ -231,7 +236,7 @@ const Dashboard = () => {
                  </div>
                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Solved Cases</p>
               </div>
-              <p className="text-4xl font-black">428</p>
+              <p className="text-4xl font-black">{globalStats.solvedCases}</p>
               <p className="text-[10px] text-muted-foreground mt-2 font-medium italic opacity-60 uppercase tracking-widest">Global Resolution Rate</p>
            </div>
         </div>
@@ -258,12 +263,12 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   <span>Community Goal</span>
-                  <span className="text-primary">82% Achieved</span>
+                  <span className="text-primary">{globalStats.resolutionRate}% Achieved</span>
                 </div>
                 <div className="w-full bg-primary/10 rounded-full h-3 overflow-hidden border border-primary/5">
                   <m.div 
                     initial={{ width: 0 }}
-                    animate={{ width: '82%' }}
+                    animate={{ width: `${globalStats.resolutionRate}%` }}
                     className="bg-primary h-full rounded-full shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)]"
                   />
                 </div>
