@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { 
-  Trash2, AlertCircle, Eye, Users, 
-  BarChart3, Truck, ClipboardList, Search, 
-  Filter, CheckCircle2, XCircle, Clock, 
+import {
+  Trash2, AlertCircle, Eye, Users,
+  BarChart3, Truck, ClipboardList, Search,
+  Filter, CheckCircle2, XCircle, Clock,
   ShieldCheck, MapPin, UserCheck, ExternalLink,
   ChevronRight, Camera, Activity
 } from 'lucide-react';
@@ -90,105 +90,112 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!mapLoaded || activeTab !== 'overview' || loading) return;
 
+    const mapContainer = document.getElementById('admin-map');
+    if (!mapContainer || mapContainer._leaflet_id || !window.L) return;
+
     const map = window.L.map('admin-map').setView([22.8046, 86.2029], 13);
 
     window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    reports.forEach((report) => {
-      let lat = null;
-      let lng = null;
+    if (Array.isArray(reports)) {
+      reports.forEach((report) => {
+        let lat = null;
+        let lng = null;
 
-      if (report.reportingCoordinates && report.reportingCoordinates.lat && report.reportingCoordinates.lng) {
-        lat = report.reportingCoordinates.lat;
-        lng = report.reportingCoordinates.lng;
-      } else if (report.location) {
-        const locLower = report.location.toLowerCase();
-        const matchedKey = Object.keys(AREA_COORDINATES).find(key => locLower.includes(key));
-        if (matchedKey) {
-          [lat, lng] = AREA_COORDINATES[matchedKey];
+        if (report.reportingCoordinates && report.reportingCoordinates.lat && report.reportingCoordinates.lng) {
+          lat = report.reportingCoordinates.lat;
+          lng = report.reportingCoordinates.lng;
+        } else if (report.location) {
+          const locLower = report.location.toLowerCase();
+          const matchedKey = Object.keys(AREA_COORDINATES).find(key => locLower.includes(key));
+          if (matchedKey) {
+            [lat, lng] = AREA_COORDINATES[matchedKey];
+          }
         }
-      }
 
-      if (lat && lng) {
-        const colorMap = {
-          'pending': '#ef4444',     // Red
-          'assigned': '#3b82f6',    // Blue
-          'cleaned': '#a855f7',     // Purple
-          'completed': '#22c55e',   // Green
-          'rejected': '#ef4444'     // Red
-        };
-        const color = colorMap[report.status] || '#ef4444';
+        if (lat && lng) {
+          const colorMap = {
+            'pending': '#ef4444',     // Red
+            'assigned': '#3b82f6',    // Blue
+            'cleaned': '#a855f7',     // Purple
+            'completed': '#22c55e',   // Green
+            'rejected': '#ef4444'     // Red
+          };
+          const color = colorMap[report.status] || '#ef4444';
 
-        const icon = window.L.divIcon({
-          html: `<div class="relative flex items-center justify-center" style="width: 20px; height: 20px;">
-                   <span class="animate-ping absolute inline-flex h-6 w-6 rounded-full opacity-75" style="background-color: ${color};"></span>
-                   <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white shadow-md" style="background-color: ${color};"></span>
-                 </div>`,
-          className: 'bg-transparent border-transparent',
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        });
+          const icon = window.L.divIcon({
+            html: `<div class="relative flex items-center justify-center" style="width: 20px; height: 20px;">
+                     <span class="animate-ping absolute inline-flex h-6 w-6 rounded-full opacity-75" style="background-color: ${color};"></span>
+                     <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white shadow-md" style="background-color: ${color};"></span>
+                   </div>`,
+            className: 'bg-transparent border-transparent',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
 
-        const popupContent = `
-          <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; min-width: 150px;">
-            <p style="margin: 0 0 5px; font-weight: bold; color: #10b981;">Case #${report._id.slice(-6).toUpperCase()}</p>
-            <p style="margin: 0 0 5px;"><b>Type:</b> ${report.wasteType.toUpperCase()}</p>
-            <p style="margin: 0 0 5px;"><b>Location:</b> ${report.location.split(',')[0]}</p>
-            <p style="margin: 0; font-weight: bold; color: #6b7280;">Status: <span style="text-transform: uppercase;">${report.status}</span></p>
-          </div>
-        `;
+          const popupContent = `
+            <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; min-width: 150px;">
+              <p style="margin: 0 0 5px; font-weight: bold; color: #10b981;">Case #${report._id.slice(-6).toUpperCase()}</p>
+              <p style="margin: 0 0 5px;"><b>Type:</b> ${report.wasteType.toUpperCase()}</p>
+              <p style="margin: 0 0 5px;"><b>Location:</b> ${report.location.split(',')[0]}</p>
+              <p style="margin: 0; font-weight: bold; color: #6b7280;">Status: <span style="text-transform: uppercase;">${report.status}</span></p>
+            </div>
+          `;
 
-        window.L.marker([lat, lng], { icon })
-          .bindPopup(popupContent)
-          .addTo(map);
-      }
-    });
-
-    pickups.forEach((pickup) => {
-      let lat = null;
-      let lng = null;
-
-      if (pickup.coordinates && pickup.coordinates.lat && pickup.coordinates.lng) {
-        lat = pickup.coordinates.lat;
-        lng = pickup.coordinates.lng;
-      } else if (pickup.location) {
-        const locLower = pickup.location.toLowerCase();
-        const matchedKey = Object.keys(AREA_COORDINATES).find(key => locLower.includes(key));
-        if (matchedKey) {
-          [lat, lng] = AREA_COORDINATES[matchedKey];
+          window.L.marker([lat, lng], { icon })
+            .bindPopup(popupContent)
+            .addTo(map);
         }
-      }
+      });
+    }
 
-      if (lat && lng) {
-        const color = pickup.status === 'completed' ? '#22c55e' : '#eab308'; // Green or Yellow
+    if (Array.isArray(pickups)) {
+      pickups.forEach((pickup) => {
+        let lat = null;
+        let lng = null;
 
-        const icon = window.L.divIcon({
-          html: `<div class="relative flex items-center justify-center" style="width: 20px; height: 20px;">
-                   <span class="animate-ping absolute inline-flex h-6 w-6 rounded-full opacity-75" style="background-color: ${color};"></span>
-                   <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white shadow-md" style="background-color: ${color};"></span>
-                 </div>`,
-          className: 'bg-transparent border-transparent',
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        });
+        if (pickup.coordinates && pickup.coordinates.lat && pickup.coordinates.lng) {
+          lat = pickup.coordinates.lat;
+          lng = pickup.coordinates.lng;
+        } else if (pickup.location) {
+          const locLower = pickup.location.toLowerCase();
+          const matchedKey = Object.keys(AREA_COORDINATES).find(key => locLower.includes(key));
+          if (matchedKey) {
+            [lat, lng] = AREA_COORDINATES[matchedKey];
+          }
+        }
 
-        const popupContent = `
-          <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; min-width: 150px;">
-            <p style="margin: 0 0 5px; font-weight: bold; color: #eab308;">Pickup Request</p>
-            <p style="margin: 0 0 5px;"><b>Citizen:</b> ${pickup.userId?.name || 'Unknown'}</p>
-            <p style="margin: 0 0 5px;"><b>Date:</b> ${new Date(pickup.preferredDate).toLocaleDateString()}</p>
-            <p style="margin: 0 0 5px;"><b>Location:</b> ${pickup.location.split(',')[0]}</p>
-            <p style="margin: 0; font-weight: bold; color: #6b7280;">Status: <span style="text-transform: uppercase;">${pickup.status}</span></p>
-          </div>
-        `;
+        if (lat && lng) {
+          const color = pickup.status === 'completed' ? '#22c55e' : '#eab308'; // Green or Yellow
 
-        window.L.marker([lat, lng], { icon })
-          .bindPopup(popupContent)
-          .addTo(map);
-      }
-    });
+          const icon = window.L.divIcon({
+            html: `<div class="relative flex items-center justify-center" style="width: 20px; height: 20px;">
+                     <span class="animate-ping absolute inline-flex h-6 w-6 rounded-full opacity-75" style="background-color: ${color};"></span>
+                     <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white shadow-md" style="background-color: ${color};"></span>
+                   </div>`,
+            className: 'bg-transparent border-transparent',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
+
+          const popupContent = `
+            <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; min-width: 150px;">
+              <p style="margin: 0 0 5px; font-weight: bold; color: #eab308;">Pickup Request</p>
+              <p style="margin: 0 0 5px;"><b>Citizen:</b> ${pickup.userId?.name || 'Unknown'}</p>
+              <p style="margin: 0 0 5px;"><b>Date:</b> ${new Date(pickup.preferredDate).toLocaleDateString()}</p>
+              <p style="margin: 0 0 5px;"><b>Location:</b> ${pickup.location.split(',')[0]}</p>
+              <p style="margin: 0; font-weight: bold; color: #6b7280;">Status: <span style="text-transform: uppercase;">${pickup.status}</span></p>
+            </div>
+          `;
+
+          window.L.marker([lat, lng], { icon })
+            .bindPopup(popupContent)
+            .addTo(map);
+        }
+      });
+    }
 
     return () => {
       map.remove();
@@ -265,11 +272,11 @@ const AdminDashboard = () => {
     const R = 6371; // Radius of the earth in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return (R * c * 1000).toFixed(0); // Distance in meters
   };
 
@@ -279,24 +286,224 @@ const AdminDashboard = () => {
     return driver ? driver.activeTasks : 0;
   };
 
+  const getDriverStats = (driverId) => {
+    const driverReports = (Array.isArray(reports) ? reports : []).filter(r => (r.assignedDriver === driverId || r.assignedDriver?._id === driverId));
+    const completed = driverReports.filter(r => r.status === 'completed').length;
+    const active = driverReports.filter(r => r.status === 'assigned').length;
+
+    let totalVariance = 0;
+    let varianceCount = 0;
+    driverReports.forEach(r => {
+      if (r.status === 'completed' || r.status === 'cleaned') {
+        const dist = calculateDistance(
+          r.reportingCoordinates?.lat, r.reportingCoordinates?.lng,
+          r.cleanupCoordinates?.lat, r.cleanupCoordinates?.lng
+        );
+        if (dist !== null) {
+          totalVariance += parseFloat(dist);
+          varianceCount++;
+        }
+      }
+    });
+
+    const avgVariance = varianceCount > 0 ? `${(totalVariance / varianceCount).toFixed(0)}m` : 'N/A';
+
+    let rating = 5.0;
+    if (completed > 0) {
+      const avgVarNum = totalVariance / varianceCount;
+      if (avgVarNum > 100) rating -= 0.5;
+      if (avgVarNum > 500) rating -= 0.5;
+      if (avgVarNum > 1000) rating -= 1.0;
+    }
+
+    return {
+      completed,
+      active,
+      avgVariance,
+      rating: Math.max(rating, 1.0).toFixed(1)
+    };
+  };
+
   const getMapLink = (location) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
 
-  const filteredReports = reports.filter(r => 
+  const exportToCSV = (filename, data, headers, labelMap) => {
+    const csvRows = [];
+    const displayHeaders = headers.map(h => labelMap[h] || h);
+    csvRows.push(displayHeaders.map(h => `"${h.replace(/"/g, '""')}"`).join(','));
+
+    data.forEach(item => {
+      const values = headers.map(header => {
+        let val = '';
+        if (header.includes('.')) {
+          const parts = header.split('.');
+          val = item;
+          for (const part of parts) {
+            val = val ? val[part] : '';
+          }
+        } else {
+          val = item[header];
+        }
+
+        if (val && (header.toLowerCase().includes('date') || header.toLowerCase().includes('createdat') || header.toLowerCase().includes('updatedat'))) {
+          try {
+            val = new Date(val).toLocaleString();
+          } catch (e) { }
+        }
+
+        const strVal = String(val || '');
+        const escaped = strVal.replace(/"/g, '""');
+        return `"${escaped}"`;
+      });
+      csvRows.push(values.join(','));
+    });
+
+    const csvContent = '\uFEFF' + csvRows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportPDFSummary = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    const content = `
+      <html>
+        <head>
+          <title>Jamshedpur EcoSync - Executive Report</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #1f2937; }
+            .header { border-bottom: 2px solid #10b981; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+            .title { font-size: 28px; font-weight: bold; color: #10b981; margin: 0; }
+            .meta { font-size: 12px; color: #6b7280; text-align: right; }
+            .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+            .stat-card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 12px; text-align: center; }
+            .stat-card h3 { font-size: 12px; color: #6b7280; text-transform: uppercase; margin: 0 0 8px 0; letter-spacing: 0.05em; }
+            .stat-card p { font-size: 24px; font-weight: bold; margin: 0; color: #111827; }
+            .section-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-top: 30px; margin-bottom: 15px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th { background-color: #f9fafb; text-align: left; padding: 12px; font-size: 12px; text-transform: uppercase; color: #4b5563; border-bottom: 2px solid #e5e7eb; }
+            td { padding: 12px; font-size: 13px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+            .badge { display: inline-block; padding: 2px 8px; font-size: 10px; font-weight: bold; border-radius: 9999px; text-transform: uppercase; }
+            .badge-cleaned { background-color: #f3e8ff; color: #7c3aed; }
+            @media print {
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1 class="title">Jamshedpur EcoSync</h1>
+              <p style="margin: 5px 0 0 0; color: #4b5563;">System Management Executive Report</p>
+            </div>
+            <div class="meta">
+              <p style="margin: 0; font-weight: bold;">Generated By: Command Center</p>
+              <p style="margin: 3px 0 0 0;">Date: ${new Date().toLocaleString()}</p>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Total Citizens</h3>
+              <p>${stats?.totalUsers || 0}</p>
+            </div>
+            <div class="stat-card">
+              <h3>Total Reports</h3>
+              <p>${stats?.totalReports || 0}</p>
+            </div>
+            <div class="stat-card">
+              <h3>Pending Pickups</h3>
+              <p>${stats?.pendingPickups || 0}</p>
+            </div>
+            <div class="stat-card">
+              <h3>Completion Rate</h3>
+              <p>${Math.round((stats?.completedReports / (stats?.totalReports || 1)) * 100)}%</p>
+            </div>
+          </div>
+
+          <h2 class="section-title">Recent Waste Cleanups Awaiting Verification</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Location</th>
+                <th>Waste Type</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(reports || []).filter(r => r.status === 'cleaned').slice(0, 5).map(r => `
+                <tr>
+                  <td>#${r._id.slice(-6).toUpperCase()}</td>
+                  <td>${r.location}</td>
+                  <td style="text-transform: capitalize;">${r.wasteType}</td>
+                  <td><span class="badge badge-cleaned">Cleaned</span></td>
+                </tr>
+              `).join('')}
+              ${(reports || []).filter(r => r.status === 'cleaned').length === 0 ? '<tr><td colspan="4" style="text-align: center; color: #6b7280; font-style: italic;">No items awaiting verification</td></tr>' : ''}
+            </tbody>
+          </table>
+
+          <h2 class="section-title">Active Cleanup Crew (Riders)</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Rider Name</th>
+                <th>Email</th>
+                <th>Rating</th>
+                <th>Missions Completed</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(drivers || []).map(d => {
+      const s = getDriverStats(d._id);
+      return `
+                  <tr>
+                    <td>${d.name}</td>
+                    <td>${d.email}</td>
+                    <td style="font-weight: bold; color: #d97706;">★ ${s.rating}</td>
+                    <td>${s.completed} Completed</td>
+                  </tr>
+                `;
+    }).join('')}
+            </tbody>
+          </table>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+    printWindow.document.write(content);
+    printWindow.document.close();
+  };
+
+  const filteredReports = (Array.isArray(reports) ? reports : []).filter(r =>
     (filterStatus === 'all' || r.status === filterStatus) &&
-    (r.userId?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     r.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     r.wasteType.toLowerCase().includes(searchQuery.toLowerCase()))
+    (r.userId?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.wasteType.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const filteredPickups = pickups.filter(p => 
+  const filteredPickups = (Array.isArray(pickups) ? pickups : []).filter(p =>
     (filterStatus === 'all' || p.status === filterStatus) &&
-    (p.userId?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-     p.location.toLowerCase().includes(searchQuery.toLowerCase()))
+    (p.userId?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.location.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsers = (Array.isArray(users) ? users : []).filter(u =>
+    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) return (
@@ -317,7 +524,14 @@ const AdminDashboard = () => {
           <p className="text-muted-foreground mt-1 text-lg">System-wide monitoring and resource management</p>
         </div>
         <div className="flex items-center gap-3">
-          <m.button 
+          <m.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            onClick={exportPDFSummary}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center gap-2"
+          >
+            <ExternalLink className="w-4 h-4" /> Export Report (PDF)
+          </m.button>
+          <m.button
             whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
             onClick={fetchData}
             className="px-4 py-2 bg-primary/10 text-primary rounded-xl font-bold border border-primary/20 hover:bg-primary/20 transition-all flex items-center gap-2"
@@ -336,20 +550,34 @@ const AdminDashboard = () => {
           { id: 'pickups', label: 'Pickups', icon: Truck },
           { id: 'fleet', label: 'Cleanup Fleet', icon: Truck },
           { id: 'users', label: 'User Management', icon: Users },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => { setActiveTab(tab.id); setSearchQuery(''); setFilterStatus('all'); }}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap ${
-              activeTab === tab.id 
-              ? 'bg-primary text-primary-foreground shadow-lg' 
-              : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-          </button>
-        ))}
+        ].map((tab) => {
+          const badgeCount =
+            tab.id === 'verification' ? (Array.isArray(reports) ? reports.filter(r => r.status === 'cleaned').length : 0) :
+              tab.id === 'reports' ? (Array.isArray(reports) ? reports.filter(r => r.status === 'pending').length : 0) :
+                tab.id === 'pickups' ? (Array.isArray(pickups) ? pickups.filter(p => p.status === 'pending').length : 0) : 0;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setSearchQuery(''); setFilterStatus('all'); }}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all whitespace-nowrap relative ${activeTab === tab.id
+                  ? 'bg-primary text-primary-foreground shadow-lg'
+                  : 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
+                }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+              {badgeCount > 0 && (
+                <span className={`ml-1.5 px-2 py-0.5 text-[10px] font-black rounded-full transition-all duration-300 ${activeTab === tab.id
+                    ? 'bg-white text-primary'
+                    : 'bg-red-500 text-white animate-pulse'
+                  }`}>
+                  {badgeCount}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Tab Content */}
@@ -363,44 +591,45 @@ const AdminDashboard = () => {
         >
           {/* OVERVIEW TAB */}
           {activeTab === 'overview' && stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <StatCard label="Total Citizens" value={stats.totalUsers} icon={Users} color="blue" />
               <StatCard label="Live Reports" value={stats.totalReports} icon={ClipboardList} color="orange" />
               <StatCard label="Pending Pickups" value={stats.pendingPickups} icon={Clock} color="yellow" />
+              <StatCard label="Pending Verification" value={(Array.isArray(reports) ? reports : []).filter(r => r.status === 'cleaned').length} icon={ShieldCheck} color="purple" />
               <StatCard label="Resolution Rate" value={`${Math.round((stats.completedReports / (stats.totalReports || 1)) * 100)}%`} icon={CheckCircle2} color="green" />
-              
+
               {/* Live Dispatch Map */}
-              <div className="lg:col-span-4 glass p-6 rounded-3xl border border-border space-y-4">
-                 <h3 className="text-xl font-bold flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-primary animate-bounce" /> Live Dispatch Map (Jamshedpur)
-                 </h3>
-                 <div id="admin-map" className="w-full h-[400px] rounded-2xl overflow-hidden border border-border relative z-10" />
-                 
-                 {/* Map Legend */}
-                 <div className="flex flex-wrap items-center justify-center gap-6 pt-4 border-t border-border/40 text-xs font-bold">
-                   <div className="flex items-center gap-2">
-                     <span className="w-3 h-3 rounded-full bg-red-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
-                     <span className="text-muted-foreground">Pending Waste Report</span>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <span className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
-                     <span className="text-muted-foreground">Crew Dispatched</span>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <span className="w-3 h-3 rounded-full bg-purple-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
-                     <span className="text-muted-foreground">Cleaned (Pending Review)</span>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <span className="w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
-                     <span className="text-muted-foreground">Completed Cleanup</span>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <span className="w-3 h-3 rounded-full bg-yellow-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
-                     <span className="text-muted-foreground">Scheduled Pickup</span>
-                   </div>
-                 </div>
+              <div className="lg:col-span-5 glass p-6 rounded-3xl border border-border space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary animate-bounce" /> Live Dispatch Map (Jamshedpur)
+                </h3>
+                <div id="admin-map" className="w-full h-[400px] rounded-2xl overflow-hidden border border-border relative z-10" />
+
+                {/* Map Legend */}
+                <div className="flex flex-wrap items-center justify-center gap-6 pt-4 border-t border-border/40 text-xs font-bold">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-red-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                    <span className="text-muted-foreground">Pending Waste Report</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                    <span className="text-muted-foreground">Crew Dispatched</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-purple-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                    <span className="text-muted-foreground">Cleaned (Pending Review)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                    <span className="text-muted-foreground">Completed Cleanup</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-yellow-500 border-2 border-white dark:border-zinc-900 shadow-sm flex-shrink-0 animate-pulse" />
+                    <span className="text-muted-foreground">Scheduled Pickup</span>
+                  </div>
+                </div>
               </div>
-              
+
               <div className="lg:col-span-3 glass p-8 rounded-3xl border border-border">
                 <h3 className="text-xl font-bold mb-6">Waste Distribution</h3>
                 <div className="flex flex-wrap gap-4">
@@ -409,40 +638,40 @@ const AdminDashboard = () => {
                       <p className="text-xs uppercase font-black text-muted-foreground tracking-widest">{type._id}</p>
                       <p className="text-2xl font-black text-primary mt-1">{type.count}</p>
                       <div className="w-full bg-primary/10 h-1.5 rounded-full mt-3 overflow-hidden">
-                        <m.div 
+                        <m.div
                           initial={{ width: 0 }} animate={{ width: `${(type.count / stats.totalReports) * 100}%` }}
-                          className="bg-primary h-full" 
+                          className="bg-primary h-full"
                         />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-              
+
               {/* Audit Trail Side-Panel */}
               <div className="glass p-8 rounded-3xl border border-border space-y-6">
-                 <h3 className="text-xl font-bold flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-primary" /> Audit Trail
-                 </h3>
-                 <div className="space-y-4">
-                    {reports.slice(0, 5).map((report) => (
-                      <div key={report._id} className="relative pl-6 pb-4 border-l border-border last:pb-0">
-                         <div className="absolute left-[-5px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary/40" />
-                         <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">
-                            {new Date(report.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                         </p>
-                         <p className="text-xs font-bold leading-tight">
-                            {report.status === 'assigned' ? 'Crew Dispatched' : 
-                             report.status === 'cleaned' ? 'Cleanup Pending' : 
-                             report.status === 'completed' ? 'Mission Verified' : 'New Report'}
-                         </p>
-                         <p className="text-[10px] text-muted-foreground italic truncate">Case #{report._id.slice(-6).toUpperCase()} - {report.location}</p>
-                      </div>
-                    ))}
-                    {reports.length === 0 && (
-                      <p className="text-xs text-muted-foreground italic text-center">No recent activity</p>
-                    )}
-                 </div>
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" /> Audit Trail
+                </h3>
+                <div className="space-y-4">
+                  {(Array.isArray(reports) ? reports : []).slice(0, 5).map((report) => (
+                    <div key={report._id} className="relative pl-6 pb-4 border-l border-border last:pb-0">
+                      <div className="absolute left-[-5px] top-1.5 w-2.5 h-2.5 rounded-full bg-primary/40" />
+                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest leading-none mb-1">
+                        {new Date(report.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      <p className="text-xs font-bold leading-tight">
+                        {report.status === 'assigned' ? 'Crew Dispatched' :
+                          report.status === 'cleaned' ? 'Cleanup Pending' :
+                            report.status === 'completed' ? 'Mission Verified' : 'New Report'}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground italic truncate">Case #{report._id.slice(-6).toUpperCase()} - {report.location}</p>
+                    </div>
+                  ))}
+                  {(!Array.isArray(reports) || reports.length === 0) && (
+                    <p className="text-xs text-muted-foreground italic text-center">No recent activity</p>
+                  )}
+                </div>
               </div>
 
               <div className="glass p-8 rounded-3xl border border-border flex flex-col items-center justify-center text-center">
@@ -456,8 +685,18 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
+              {/* Weekly Activity Trend Chart */}
+              <div className="lg:col-span-3 glass p-8 rounded-3xl border border-border space-y-4">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" /> Weekly Report Activity
+                </h3>
+                <div className="w-full h-[220px] flex items-center justify-center">
+                  <WeeklyTrendChart reports={reports} />
+                </div>
+              </div>
+
               {/* Broadcast Center Widget */}
-              <div className="lg:col-span-3 glass p-8 rounded-3xl border border-border flex flex-col justify-between">
+              <div className="lg:col-span-2 glass p-8 rounded-3xl border border-border flex flex-col justify-between">
                 <div>
                   <h3 className="text-xl font-bold flex items-center gap-2 mb-2">
                     <AlertCircle className="w-5 h-5 text-primary" /> City-Wide Broadcast Center
@@ -505,11 +744,10 @@ const AdminDashboard = () => {
                   <div className="mt-6 pt-6 border-t border-border/40 flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className={`w-2 h-2 rounded-full animate-pulse ${
-                          activeAnnouncement.type === 'alert' ? 'bg-red-500' :
-                          activeAnnouncement.type === 'warning' ? 'bg-yellow-500' :
-                          'bg-blue-500'
-                        }`} />
+                        <span className={`w-2 h-2 rounded-full animate-pulse ${activeAnnouncement.type === 'alert' ? 'bg-red-500' :
+                            activeAnnouncement.type === 'warning' ? 'bg-yellow-500' :
+                              'bg-blue-500'
+                          }`} />
                         <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                           Active Broadcast ({activeAnnouncement.type})
                         </span>
@@ -528,94 +766,112 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {activeTab === 'overview' && !stats && (
+            <div className="glass p-12 rounded-3xl border border-border text-center space-y-6 max-w-2xl mx-auto my-12 shadow-2xl">
+              <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto border border-primary/20">
+                <AlertCircle className="w-8 h-8 text-primary animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold tracking-tight">Synchronization Required</h3>
+                <p className="text-sm text-muted-foreground">
+                  The Command Center statistics are pending sync or could not be loaded from the database server. Click below to synchronize.
+                </p>
+              </div>
+              <button
+                onClick={fetchData}
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg hover:shadow-primary/20 transition-all inline-flex items-center gap-2 hover:bg-primary/95"
+              >
+                <Clock className="w-4 h-4" /> Sync Now
+              </button>
+            </div>
+          )}
+
           {/* VERIFICATION TAB */}
           {activeTab === 'verification' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-               {reports.filter(r => r.status === 'cleaned').map(report => (
-                 <m.div key={report._id} layout className="glass p-6 rounded-3xl border border-border space-y-4">
-                    <div className="flex justify-between items-start">
-                       <div>
-                          <h3 className="font-bold text-lg">Case #{report._id.slice(-6).toUpperCase()}</h3>
-                          <p className="text-sm text-muted-foreground">{report.location}</p>
-                       </div>
-                       <StatusBadge status="cleaned" />
+              {(Array.isArray(reports) ? reports : []).filter(r => r.status === 'cleaned').map(report => (
+                <m.div key={report._id} layout className="glass p-6 rounded-3xl border border-border space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-bold text-lg">Case #{report._id.slice(-6).toUpperCase()}</h3>
+                      <p className="text-sm text-muted-foreground">{report.location}</p>
                     </div>
-                    
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                           <p className="text-[10px] font-black uppercase text-muted-foreground">Before (User)</p>
-                           <div className="aspect-square rounded-2xl overflow-hidden border border-border relative group cursor-pointer" onClick={() => setViewImage(report.image)}>
-                              <img src={report.image} alt="Before" className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                 <Eye className="text-white" />
-                              </div>
-                           </div>
-                        </div>
-                        <div className="space-y-2">
-                           <p className="text-[10px] font-black uppercase text-muted-foreground">After (Crew)</p>
-                           <div className="aspect-square rounded-2xl overflow-hidden border-2 border-primary/30 relative group cursor-pointer" onClick={() => setViewImage(report.cleanedImage)}>
-                              <img src={report.cleanedImage} alt="After" className="w-full h-full object-cover" />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                 <Eye className="text-white" />
-                              </div>
-                           </div>
-                        </div>
-                     </div>
+                    <StatusBadge status="cleaned" />
+                  </div>
 
-                     {/* GPS Accuracy Check */}
-                     <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                           <div className={`w-3 h-3 rounded-full animate-pulse ${
-                             calculateDistance(
-                               report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
-                               report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
-                             ) < 100 ? 'bg-green-500' : 'bg-red-500'
-                           }`} />
-                           <p className="text-xs font-bold">GPS Accuracy Check</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black uppercase text-muted-foreground">Before (User)</p>
+                      <div className="aspect-square rounded-2xl overflow-hidden border border-border relative group cursor-pointer" onClick={() => setViewImage(report.image)}>
+                        <img src={report.image} alt="Before" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Eye className="text-white" />
                         </div>
-                        <div className="text-right">
-                           <p className={`text-xs font-black uppercase ${
-                             calculateDistance(
-                               report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
-                               report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
-                             ) < 100 ? 'text-green-500' : 'text-red-500'
-                           }`}>
-                             {calculateDistance(
-                               report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
-                               report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
-                             ) ? `${calculateDistance(
-                               report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
-                               report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
-                             )}m Variance` : 'No GPS Data'}
-                           </p>
-                           <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">
-                             {calculateDistance(
-                               report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
-                               report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
-                             ) < 100 ? 'Location Verified' : 'Check Site Integrity'}
-                           </p>
-                        </div>
-                     </div>
-
-                    <div className="flex gap-3 pt-4">
-                       <button 
-                        onClick={() => handleUpdateStatus('report', report._id, 'completed')}
-                        className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2"
-                       >
-                          <CheckCircle2 className="w-4 h-4" /> Approve Cleanup
-                       </button>
-                       <button 
-                        onClick={() => handleUpdateStatus('report', report._id, 'assigned')}
-                        className="px-6 py-3 border border-red-500/30 text-red-500 rounded-xl font-bold hover:bg-red-500/5 transition-all"
-                       >
-                          Reject
-                       </button>
+                      </div>
                     </div>
-                 </m.div>
-               ))}
-               {reports.filter(r => r.status === 'cleaned').length === 0 && (
-                 <div className="col-span-full"><EmptyState label="No cleanup submissions awaiting verification" /></div>
-               )}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black uppercase text-muted-foreground">After (Crew)</p>
+                      <div className="aspect-square rounded-2xl overflow-hidden border-2 border-primary/30 relative group cursor-pointer" onClick={() => setViewImage(report.cleanedImage)}>
+                        <img src={report.cleanedImage} alt="After" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Eye className="text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* GPS Accuracy Check */}
+                  <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full animate-pulse ${calculateDistance(
+                        report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
+                        report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
+                      ) < 100 ? 'bg-green-500' : 'bg-red-500'
+                        }`} />
+                      <p className="text-xs font-bold">GPS Accuracy Check</p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-xs font-black uppercase ${calculateDistance(
+                        report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
+                        report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
+                      ) < 100 ? 'text-green-500' : 'text-red-500'
+                        }`}>
+                        {calculateDistance(
+                          report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
+                          report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
+                        ) ? `${calculateDistance(
+                          report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
+                          report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
+                        )}m Variance` : 'No GPS Data'}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest">
+                        {calculateDistance(
+                          report.reportingCoordinates?.lat, report.reportingCoordinates?.lng,
+                          report.cleanupCoordinates?.lat, report.cleanupCoordinates?.lng
+                        ) < 100 ? 'Location Verified' : 'Check Site Integrity'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={() => handleUpdateStatus('report', report._id, 'completed')}
+                      className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-bold shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Approve Cleanup
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus('report', report._id, 'assigned')}
+                      className="px-6 py-3 border border-red-500/30 text-red-500 rounded-xl font-bold hover:bg-red-500/5 transition-all"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </m.div>
+              ))}
+              {(!Array.isArray(reports) || reports.filter(r => r.status === 'cleaned').length === 0) && (
+                <div className="col-span-full"><EmptyState label="No cleanup submissions awaiting verification" /></div>
+              )}
             </div>
           )}
 
@@ -626,8 +882,8 @@ const AdminDashboard = () => {
               <div className="flex flex-col md:flex-row gap-4 items-center justify-between glass p-4 rounded-2xl border border-border">
                 <div className="relative w-full md:max-w-md">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="Search reports..."
                     className="w-full pl-10 pr-4 py-2 bg-primary/5 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     value={searchQuery}
@@ -635,18 +891,37 @@ const AdminDashboard = () => {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-muted-foreground" />
-                    <select 
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="bg-primary/5 border border-border rounded-xl px-4 py-2 text-sm font-bold outline-none cursor-pointer"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="pending">Pending Assignment</option>
-                      <option value="assigned">Assigned</option>
-                      <option value="cleaned">Cleaning Done</option>
-                      <option value="completed">Completed</option>
-                    </select>
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="bg-primary/5 border border-border rounded-xl px-4 py-2 text-sm font-bold outline-none cursor-pointer"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending Assignment</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="cleaned">Cleaning Done</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                  <button
+                    onClick={() => exportToCSV(
+                      'Waste_Reports',
+                      filteredReports,
+                      ['_id', 'userId.name', 'userId.email', 'wasteType', 'location', 'status', 'createdAt'],
+                      {
+                        '_id': 'Case ID',
+                        'userId.name': 'Citizen Name',
+                        'userId.email': 'Citizen Email',
+                        'wasteType': 'Waste Type',
+                        'location': 'Location',
+                        'status': 'Status',
+                        'createdAt': 'Reported Date'
+                      }
+                    )}
+                    className="px-4 py-2 bg-primary/10 text-primary rounded-xl font-bold border border-primary/20 hover:bg-primary/20 transition-all text-sm flex items-center gap-1.5"
+                  >
+                    Export CSV
+                  </button>
                 </div>
               </div>
 
@@ -686,8 +961,8 @@ const AdminDashboard = () => {
                               <MapPin className="w-3 h-3 text-red-400 shrink-0" />
                               <span className="truncate">{report.location}</span>
                             </div>
-                            <a 
-                              href={getMapLink(report.location)} 
+                            <a
+                              href={getMapLink(report.location)}
                               target="_blank" rel="noopener noreferrer"
                               className="text-[10px] text-primary hover:underline flex items-center gap-1 font-bold"
                             >
@@ -706,7 +981,7 @@ const AdminDashboard = () => {
                           )}
 
                           {report.status !== 'completed' && report.status !== 'rejected' && (
-                            <button 
+                            <button
                               onClick={() => setAssigningTo(report)}
                               className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-[10px] font-bold shadow-md hover:shadow-primary/20 transition-all flex items-center gap-1"
                               title="Assign Driver"
@@ -715,7 +990,7 @@ const AdminDashboard = () => {
                             </button>
                           )}
 
-                          <select 
+                          <select
                             value={report.status}
                             onChange={(e) => handleUpdateStatus('report', report._id, e.target.value)}
                             className="text-xs border border-border bg-white dark:bg-black rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-primary outline-none cursor-pointer font-bold"
@@ -735,10 +1010,37 @@ const AdminDashboard = () => {
 
           {/* PICKUPS TAB */}
           {activeTab === 'pickups' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPickups.map(pickup => (
-                <m.div key={pickup._id} layout className="glass p-6 rounded-3xl border border-border shadow-xl hover:shadow-primary/5 transition-all group">
-                   <div className="flex justify-between items-center mb-5">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="space-y-1">
+                  <h2 className="text-xl font-bold tracking-tight">Scheduled Pickups</h2>
+                  <p className="text-xs text-muted-foreground">Citizen requested waste collections</p>
+                </div>
+                <button
+                  onClick={() => exportToCSV(
+                    'Pickup_Requests',
+                    filteredPickups,
+                    ['_id', 'userId.name', 'userId.email', 'preferredDate', 'location', 'status', 'notes'],
+                    {
+                      '_id': 'Pickup ID',
+                      'userId.name': 'Citizen Name',
+                      'userId.email': 'Citizen Email',
+                      'preferredDate': 'Scheduled Date',
+                      'location': 'Location Address',
+                      'status': 'Status',
+                      'notes': 'Notes'
+                    }
+                  )}
+                  className="px-4 py-2 bg-primary/10 text-primary rounded-xl font-bold border border-primary/20 hover:bg-primary/20 transition-all text-sm flex items-center gap-1.5"
+                >
+                  Export CSV
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPickups.map(pickup => (
+                  <m.div key={pickup._id} layout className="glass p-6 rounded-3xl border border-border shadow-xl hover:shadow-primary/5 transition-all group">
+                    <div className="flex justify-between items-center mb-5">
                       <StatusBadge status={pickup.status} />
                       <p className="text-[10px] font-black tracking-widest text-muted-foreground uppercase">
                         {new Date(pickup.preferredDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -754,7 +1056,7 @@ const AdminDashboard = () => {
                         <p className="text-xs text-muted-foreground">{pickup.userId?.email}</p>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3 mb-6 bg-primary/5 p-4 rounded-2xl border border-border/50">
                       <div className="flex gap-2 text-sm font-medium italic">
                         <MapPin className="w-4 h-4 text-red-500 shrink-0" />
@@ -763,7 +1065,7 @@ const AdminDashboard = () => {
                       {pickup.notes && <p className="text-xs text-muted-foreground pl-6 line-clamp-2">"{pickup.notes}"</p>}
                     </div>
 
-                    <select 
+                    <select
                       value={pickup.status}
                       onChange={(e) => handleUpdateStatus('pickup', pickup._id, e.target.value)}
                       className="w-full text-sm border border-border bg-white dark:bg-black rounded-xl px-4 py-2 font-bold outline-none focus:ring-2 focus:ring-primary/20"
@@ -773,11 +1075,12 @@ const AdminDashboard = () => {
                       <option value="completed">Complete</option>
                       <option value="rejected">Reject</option>
                     </select>
-                </m.div>
-              ))}
+                  </m.div>
+                ))}
+              </div>
             </div>
           )}
-          
+
           {/* USERS TAB */}
           {activeTab === 'users' && (
             <div className="overflow-x-auto glass rounded-2xl border border-border">
@@ -805,10 +1108,9 @@ const AdminDashboard = () => {
                         </div>
                       </td>
                       <td className="p-5">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                          u.role === 'admin' ? 'bg-purple-500/10 text-purple-500' : 
-                          u.role === 'driver' ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${u.role === 'admin' ? 'bg-purple-500/10 text-purple-500' :
+                            u.role === 'driver' ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'
+                          }`}>
                           {u.role === 'driver' ? 'Cleanup Crew' : u.role}
                         </span>
                       </td>
@@ -816,7 +1118,7 @@ const AdminDashboard = () => {
                         {new Date(u.createdAt).toLocaleDateString()}
                       </td>
                       <td className="p-5 text-right">
-                        <button 
+                        <button
                           onClick={() => handleDeleteUser(u._id)}
                           disabled={u.role === 'admin'}
                           className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-30"
@@ -834,50 +1136,108 @@ const AdminDashboard = () => {
           {/* FLEET MANAGEMENT TAB */}
           {activeTab === 'fleet' && (
             <div className="space-y-8">
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="space-y-1">
-                     <h2 className="text-3xl font-black tracking-tight">Cleanup Fleet</h2>
-                     <p className="text-muted-foreground font-medium italic">Active Vehicle Riders & Field Personnel</p>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="space-y-1">
+                  <h2 className="text-3xl font-black tracking-tight">Cleanup Fleet</h2>
+                  <p className="text-muted-foreground font-medium italic">Active Vehicle Riders & Field Personnel</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      const mappedFleet = (drivers || []).map(d => {
+                        const s = getDriverStats(d._id);
+                        return {
+                          name: d.name,
+                          email: d.email,
+                          location: d.location || 'Not set',
+                          active: s.active,
+                          completed: s.completed,
+                          avgVariance: s.avgVariance,
+                          rating: s.rating
+                        };
+                      });
+                      exportToCSV(
+                        'Fleet_Performance',
+                        mappedFleet,
+                        ['name', 'email', 'location', 'active', 'completed', 'avgVariance', 'rating'],
+                        {
+                          'name': 'Rider Name',
+                          'email': 'Email Address',
+                          'location': 'Last Reported Location',
+                          'active': 'Active Tasks',
+                          'completed': 'Completed Tasks',
+                          'avgVariance': 'Average GPS Variance',
+                          'rating': 'Performance Rating'
+                        }
+                      );
+                    }}
+                    className="px-4 py-2 bg-primary/10 text-primary rounded-xl font-bold border border-primary/20 hover:bg-primary/20 transition-all text-xs"
+                  >
+                    Export Crew Stats
+                  </button>
+                  <div className="px-4 py-2 bg-primary/10 text-primary rounded-xl font-black text-xs uppercase tracking-widest border border-primary/20">
+                    {(Array.isArray(drivers) ? drivers.length : 0)} Units Online
                   </div>
-                  <div className="flex items-center gap-3">
-                     <div className="px-4 py-2 bg-primary/10 text-primary rounded-xl font-black text-xs uppercase tracking-widest border border-primary/20">
-                       {drivers.length} Units Online
-                     </div>
-                  </div>
-               </div>
+                </div>
+              </div>
 
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {drivers.map(driver => (
-                    <m.div 
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(Array.isArray(drivers) ? drivers : []).map(driver => {
+                  const dStats = getDriverStats(driver._id);
+                  return (
+                    <m.div
                       whileHover={{ y: -5 }}
-                      key={driver._id} 
-                      className="glass p-6 rounded-3xl border border-border space-y-4 hover:border-primary/30 transition-all"
+                      key={driver._id}
+                      className="glass p-6 rounded-3xl border border-border space-y-4 hover:border-primary/30 transition-all relative overflow-hidden"
                     >
-                       <div className="flex items-center gap-4">
-                          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl overflow-hidden border border-primary/10">
-                             {driver.profilePhoto ? <img src={driver.profilePhoto} className="w-full h-full object-cover" /> : driver.name[0]}
-                          </div>
-                          <div>
-                             <h3 className="font-bold text-lg leading-none mb-1">{driver.name}</h3>
-                             <p className="text-xs text-muted-foreground font-mono">{driver.email}</p>
-                          </div>
-                       </div>
-                       <div className="space-y-2 border-t border-border pt-4">
-                          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-                             <MapPin className="w-3 h-3 text-red-500" /> {driver.location || 'Location Not Set'}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs font-bold text-green-500">
-                             <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Verified Cleanup Unit
-                          </div>
-                       </div>
+                      {/* Rating badge */}
+                      <div className="absolute top-4 right-4 flex items-center gap-1 px-2.5 py-1 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20 rounded-full text-xs font-black">
+                        <span className="text-[10px]">★</span> {dStats.rating}
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-2xl overflow-hidden border border-primary/10">
+                          {driver.profilePhoto ? <img src={driver.profilePhoto} className="w-full h-full object-cover" /> : driver.name[0]}
+                        </div>
+                        <div className="pr-12">
+                          <h3 className="font-bold text-lg leading-none mb-1">{driver.name}</h3>
+                          <p className="text-xs text-muted-foreground font-mono truncate max-w-[150px]">{driver.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 border-t border-border pt-4">
+                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                          <MapPin className="w-3 h-3 text-red-500" /> {driver.location || 'Location Not Set'}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-bold text-green-500">
+                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Verified Cleanup Unit
+                        </div>
+                      </div>
+
+                      {/* Performance metrics grid */}
+                      <div className="grid grid-cols-3 gap-2 pt-2 text-center border-t border-border/40">
+                        <div className="bg-primary/5 p-2 rounded-xl border border-primary/10">
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Active</p>
+                          <p className="text-sm font-black text-primary mt-0.5">{dStats.active}</p>
+                        </div>
+                        <div className="bg-green-500/5 p-2 rounded-xl border border-green-500/10">
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">Done</p>
+                          <p className="text-sm font-black text-green-500 mt-0.5">{dStats.completed}</p>
+                        </div>
+                        <div className="bg-purple-500/5 p-2 rounded-xl border border-purple-500/10">
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">GPS Var</p>
+                          <p className="text-sm font-black text-purple-500 mt-0.5">{dStats.avgVariance}</p>
+                        </div>
+                      </div>
                     </m.div>
-                  ))}
-                  {drivers.length === 0 && (
-                    <div className="lg:col-span-3">
-                       <EmptyState label="No drivers found. Promote users to 'driver' role to see them here." />
-                    </div>
-                  )}
-               </div>
+                  );
+                })}
+                {drivers.length === 0 && (
+                  <div className="lg:col-span-3">
+                    <EmptyState label="No drivers found. Promote users to 'driver' role to see them here." />
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </m.div>
@@ -887,49 +1247,49 @@ const AdminDashboard = () => {
       <AnimatePresence>
         {assigningTo && (
           <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
-             <m.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 border border-white/10 shadow-2xl">
-                <div className="flex justify-between items-center mb-6">
-                   <h2 className="text-2xl font-black">Assign Cleanup Crew</h2>
-                   <button onClick={() => setAssigningTo(null)} className="p-2 hover:bg-primary/10 rounded-full"><XCircle /></button>
-                </div>
-                
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                    {drivers.map(driver => (
-                      <button 
-                       key={driver._id} 
-                       onClick={() => handleAssignDriver(assigningTo._id, driver._id)}
-                       className="w-full text-left p-4 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/40 hover:bg-primary/10 transition-all flex items-center gap-4 group"
-                      >
-                         <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center font-black text-primary group-hover:scale-110 transition-transform relative">
-                            {driver.name[0]}
-                            {getLoadForDriver(driver._id) > 0 && (
-                              <span className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white dark:border-zinc-900 shadow-lg">
-                                 {getLoadForDriver(driver._id)}
-                              </span>
-                            )}
-                         </div>
-                         <div className="flex-1">
-                            <p className="font-bold">{driver.name}</p>
-                            <div className="flex items-center gap-2">
-                               <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest leading-none">
-                                  Current Load: <span className={getLoadForDriver(driver._id) > 2 ? 'text-red-500 font-bold' : 'text-primary'}>
-                                     {getLoadForDriver(driver._id)} Active Missions
-                                  </span>
-                               </p>
-                            </div>
-                         </div>
-                         <ChevronRight className="w-5 h-5 text-primary/30 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    ))}
-                   {drivers.length === 0 && (
-                     <div className="p-8 text-center bg-red-500/5 rounded-2xl border border-red-500/10">
-                        <AlertCircle className="w-10 h-10 text-red-500/50 mx-auto mb-2" />
-                        <p className="text-sm font-bold text-red-500">No active cleanup crews found.</p>
-                        <p className="text-xs text-muted-foreground mt-1">Please promote a user to 'driver' role first.</p>
-                     </div>
-                   )}
-                </div>
-             </m.div>
+            <m.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-3xl p-8 border border-white/10 shadow-2xl">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black">Assign Cleanup Crew</h2>
+                <button onClick={() => setAssigningTo(null)} className="p-2 hover:bg-primary/10 rounded-full"><XCircle /></button>
+              </div>
+
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                {(Array.isArray(drivers) ? drivers : []).map(driver => (
+                  <button
+                    key={driver._id}
+                    onClick={() => handleAssignDriver(assigningTo._id, driver._id)}
+                    className="w-full text-left p-4 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/40 hover:bg-primary/10 transition-all flex items-center gap-4 group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center font-black text-primary group-hover:scale-110 transition-transform relative">
+                      {driver.name[0]}
+                      {getLoadForDriver(driver._id) > 0 && (
+                        <span className="absolute -top-2 -right-2 w-6 h-6 bg-orange-500 text-white text-[10px] rounded-full flex items-center justify-center border-2 border-white dark:border-zinc-900 shadow-lg">
+                          {getLoadForDriver(driver._id)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold">{driver.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest leading-none">
+                          Current Load: <span className={getLoadForDriver(driver._id) > 2 ? 'text-red-500 font-bold' : 'text-primary'}>
+                            {getLoadForDriver(driver._id)} Active Missions
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-primary/30 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                ))}
+                {(!Array.isArray(drivers) || drivers.length === 0) && (
+                  <div className="p-8 text-center bg-red-500/5 rounded-2xl border border-red-500/10">
+                    <AlertCircle className="w-10 h-10 text-red-500/50 mx-auto mb-2" />
+                    <p className="text-sm font-bold text-red-500">No active cleanup crews found.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Please promote a user to 'driver' role first.</p>
+                  </div>
+                )}
+              </div>
+            </m.div>
           </m.div>
         )}
       </AnimatePresence>
@@ -937,7 +1297,7 @@ const AdminDashboard = () => {
       {/* Image Modal */}
       <AnimatePresence>
         {viewImage && (
-          <m.div 
+          <m.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
             onClick={() => setViewImage(null)}
@@ -961,6 +1321,7 @@ const StatCard = ({ label, value, icon: Icon, color }) => {
     green: 'text-green-500 bg-green-500/10 border-green-500/20',
     orange: 'text-orange-500 bg-orange-500/10 border-orange-500/20',
     yellow: 'text-yellow-500 bg-yellow-500/10 border-yellow-500/20',
+    purple: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
   };
 
   return (
@@ -998,6 +1359,87 @@ const EmptyState = ({ label }) => (
     <p className="text-muted-foreground font-medium">{label}</p>
   </div>
 );
+
+const WeeklyTrendChart = ({ reports = [] }) => {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const data = days.map((day, index) => {
+    const dayReports = Array.isArray(reports) ? reports.filter(r => new Date(r.createdAt).getDay() === index) : [];
+    const reported = dayReports.length;
+    const completed = dayReports.filter(r => r.status === 'completed').length;
+    return { day, reported, completed };
+  });
+
+  const maxVal = Math.max(...data.map(d => Math.max(d.reported, d.completed, 1)));
+
+  const width = 500;
+  const height = 180;
+  const padding = 30;
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2;
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full text-muted-foreground select-none">
+      {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+        const y = padding + chartHeight * (1 - ratio);
+        return (
+          <g key={i}>
+            <line x1={padding} y1={y} x2={width - padding} y2={y} className="stroke-border/40 stroke-1" strokeDasharray="4 4" />
+            <text x={padding - 8} y={y + 3} className="text-[10px] font-bold fill-muted-foreground/70 text-right" textAnchor="end">
+              {Math.round(ratio * maxVal)}
+            </text>
+          </g>
+        );
+      })}
+
+      {data.map((d, i) => {
+        const xSegment = padding + (chartWidth / 7) * i;
+        const xCenter = xSegment + (chartWidth / 14);
+
+        const barWidth = 10;
+        const xRep = xCenter - barWidth - 2;
+        const xComp = xCenter + 2;
+
+        const hRep = (d.reported / maxVal) * chartHeight;
+        const hComp = (d.completed / maxVal) * chartHeight;
+
+        const yRep = padding + chartHeight - hRep;
+        const yComp = padding + chartHeight - hComp;
+
+        return (
+          <g key={d.day}>
+            {/* Reported Bar */}
+            <rect
+              x={xRep}
+              y={yRep}
+              width={barWidth}
+              height={Math.max(hRep, 2)}
+              rx={2}
+              className="fill-orange-500/80 hover:fill-orange-500 transition-colors cursor-pointer"
+            >
+              <title>Reported: {d.reported}</title>
+            </rect>
+
+            {/* Completed Bar */}
+            <rect
+              x={xComp}
+              y={yComp}
+              width={barWidth}
+              height={Math.max(hComp, 2)}
+              rx={2}
+              className="fill-emerald-500/80 hover:fill-emerald-500 transition-colors cursor-pointer"
+            >
+              <title>Completed: {d.completed}</title>
+            </rect>
+
+            <text x={xCenter} y={height - 8} className="text-[10px] font-black fill-muted-foreground/60" textAnchor="middle">
+              {d.day}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+};
 
 export default AdminDashboard;
 
