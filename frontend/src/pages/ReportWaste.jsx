@@ -92,16 +92,23 @@ const ReportWaste = () => {
   };
 
   const handleAIScan = async () => {
-    if (!preview) {
+    if (!imageFile) {
       return toast.warn("Please upload an image of the waste first!");
     }
 
     setAiScanning(true);
     try {
-      const { data } = await api.post('/waste/analyze');
+      const payload = new FormData();
+      payload.append('image', imageFile);
+
+      const { data } = await api.post('/waste/analyze', payload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
-      // Delay of 2.5s to show scanner animation
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Delay of 1.5s to show scanner animation (reduced from 2.5s for a snappier real-time feel)
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       setFormData(prev => ({
         ...prev,
@@ -111,7 +118,7 @@ const ReportWaste = () => {
       setAiResult(data.aiAnalysis);
       toast.success("AI Scan Complete! Waste type & descriptions prefilled.");
     } catch (err) {
-      toast.error("Simulated AI scan failed. Please select details manually.");
+      toast.error("AI scan failed. Please select details manually.");
     } finally {
       setAiScanning(false);
     }
@@ -124,7 +131,7 @@ const ReportWaste = () => {
       return toast.warn("Please wait for evidence processing/AI scan to complete.");
     }
 
-    if (!formData.selectedArea || !formData.preciseLocation || !formData.description) {
+    if (!formData.selectedArea || !formData.description) {
       toast.error("Please fill in all required fields!");
       return;
     }
@@ -135,7 +142,9 @@ const ReportWaste = () => {
       payload.append('wasteType', formData.wasteType);
       payload.append('description', formData.description);
       
-      const combinedLocation = `${formData.selectedArea} - ${formData.preciseLocation}`;
+      const combinedLocation = formData.preciseLocation 
+        ? `${formData.selectedArea} - ${formData.preciseLocation}`
+        : formData.selectedArea;
       payload.append('location', combinedLocation);
       if (formData.reportingCoordinates) {
         payload.append('reportingCoordinates', JSON.stringify(formData.reportingCoordinates));
@@ -218,7 +227,7 @@ const ReportWaste = () => {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                   <label className="block text-sm font-medium">Precise Location / Landmark*</label>
+                   <label className="block text-sm font-medium">Precise Location / Landmark</label>
                    <button 
                      type="button"
                      onClick={getLocation}
@@ -231,11 +240,10 @@ const ReportWaste = () => {
                 <div className="relative">
                   <input 
                     type="text" 
-                    placeholder="E.g., Near Main Gate, behind market"
+                    placeholder="E.g., Near Main Gate, behind market (Optional)"
                     className="w-full px-4 py-2 bg-white/50 dark:bg-black/50 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
                     value={formData.preciseLocation}
                     onChange={(e) => setFormData({...formData, preciseLocation: e.target.value})}
-                    required
                   />
                 </div>
               </div>

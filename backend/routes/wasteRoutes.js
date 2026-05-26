@@ -23,7 +23,7 @@ const driverOnly = (req, res, next) => {
 };
 
 router.post('/report', protect, upload.single('image'), reportWaste);
-router.post('/analyze', protect, analyzeWasteImage);
+router.post('/analyze', protect, upload.single('image'), analyzeWasteImage);
 router.get('/all', protect, admin, getAllReports);
 router.get('/myreports', protect, getMyReports);
 router.get('/assigned', protect, driverOnly, getAssignedTasks);

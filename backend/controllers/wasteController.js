@@ -1,6 +1,7 @@
 const WasteReport = require('../models/WasteReport');
 const User = require('../models/User');
 const cloudinary = require('../config/cloudinary');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // @desc    Report waste
 // @route   POST /api/waste/report
@@ -220,11 +221,60 @@ const submitCleanup = async (req, res) => {
   }
 };
 
-// @desc    Simulate AI waste classification & analytics
+// @desc    Analyze waste image using Gemini API or simulate fallback
 // @route   POST /api/waste/analyze
 // @access  Private
 const analyzeWasteImage = async (req, res) => {
   try {
+    // If Gemini API Key is configured and a file was uploaded, perform real analysis
+    if (process.env.GEMINI_API_KEY && req.file) {
+      try {
+        console.log(`[AI Scanner] Analyzing uploaded image using Google Gemini API (${req.file.size} bytes)...`);
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({
+          model: 'gemini-1.5-flash',
+          generationConfig: { responseMimeType: 'application/json' },
+        });
+
+        const imagePart = {
+          inlineData: {
+            data: req.file.buffer.toString('base64'),
+            mimeType: req.file.mimetype,
+          },
+        };
+
+        const prompt = `Analyze this image of reported waste. Identify the types of waste visible and categorise the primary waste type into exactly one of: 'plastic', 'organic', 'electronic', 'hazardous', or 'general'. 
+Provide a descriptive summary of the trash seen.
+Estimate the total weight of the waste in kilograms (number between 1 and 100).
+Evaluate how recyclable it is (recyclabilityPercentage as number between 0 and 100).
+Estimate carbon saved in kg by recycling it (carbonSavedKg as a number, calculated roughly as: weight * (recyclabilityPercentage / 100) * 0.45, rounded to 1 decimal place).
+
+Return ONLY a JSON object matching this structure:
+{
+  "wasteType": "plastic" | "organic" | "electronic" | "hazardous" | "general",
+  "description": "AI Assist: Identified [detailed description of waste objects seen]",
+  "aiAnalysis": {
+    "isRecyclable": boolean,
+    "recyclabilityPercentage": number,
+    "estimatedWeightKg": number,
+    "carbonSavedKg": number
+  }
+}`;
+
+        const result = await model.generateContent([prompt, imagePart]);
+        const response = await result.response;
+        const text = response.text();
+        const data = JSON.parse(text);
+
+        console.log('[AI Scanner] Gemini analysis successful:', data);
+        return res.json(data);
+      } catch (geminiError) {
+        console.error('[AI Scanner] Gemini API execution failed, falling back to simulation:', geminiError);
+      }
+    }
+
+    // Fallback simulated logic (if key not configured or API call failed)
+    console.log('[AI Scanner] Running simulated waste analysis...');
     const wasteCategories = ['plastic', 'organic', 'electronic', 'hazardous', 'general'];
     const selectedCategory = wasteCategories[Math.floor(Math.random() * wasteCategories.length)];
 
@@ -246,7 +296,7 @@ const analyzeWasteImage = async (req, res) => {
 
     res.json({
       wasteType: selectedCategory,
-      description: `AI Assist: Identified ${aiDescriptions[selectedCategory]}`,
+      description: `AI Assist (Simulation): Identified ${aiDescriptions[selectedCategory]}`,
       aiAnalysis: {
         isRecyclable: recyclabilityPercentage > 30,
         recyclabilityPercentage,
@@ -255,6 +305,7 @@ const analyzeWasteImage = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('[AI Scanner] Critical error in analyzeWasteImage:', error);
     res.status(500).json({ message: error.message });
   }
 };
