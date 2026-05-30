@@ -11,7 +11,7 @@ EcoSync is a next-generation, smart municipal waste management and recycling pla
 
 ## 📸 City Banner
 
-![EcoSync Jamshedpur](./assets/jamshespur.png)
+![EcoSync Jamshedpur](./frontend/src/assets/jamshespur.png)
 
 ---
 
