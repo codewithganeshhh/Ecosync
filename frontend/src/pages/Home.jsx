@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Leaf, ArrowRight, ShieldCheck, Recycle, MapPin, CheckCircle, BarChart3, Users, Globe2, Sparkles, HelpCircle, ChevronDown } from 'lucide-react';
+import { Leaf, ArrowRight, ShieldCheck, Recycle, MapPin, CheckCircle, BarChart3, Users, Globe2, Sparkles, HelpCircle, ChevronDown, ChevronLeft, ChevronRight, Trophy, Clock, Flame, Calendar } from 'lucide-react';
 import jamshedpurImage from '../assets/jamshedpur.png';
+import cleanupBefore1 from '../assets/cleanup_before_1.png';
+import cleanupAfter1 from '../assets/cleanup_after_1.png';
+import cleanupBefore2 from '../assets/cleanup_before_2.png';
+import cleanupAfter2 from '../assets/cleanup_after_2.png';
+import cleanupBefore3 from '../assets/cleanup_before_3.png';
+import cleanupAfter3 from '../assets/cleanup_after_3.png';
+import cleanupBefore4 from '../assets/cleanup_before_4.png';
+import cleanupAfter4 from '../assets/cleanup_after_4.png';
 
 // Dynamic Count-Up Counter Component
 const Counter = ({ value, suffix = "" }) => {
@@ -31,6 +39,304 @@ const Counter = ({ value, suffix = "" }) => {
 
   return <span>{count.toLocaleString()}{suffix}</span>;
 };
+
+// Before & After Image Slider Component
+const BeforeAfterSlider = ({ beforeImg, afterImg, beforeLabel = "Before", afterLabel = "After" }) => {
+  const [sliderPos, setSliderPos] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef(null);
+
+  const handleMove = (clientX) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    let percentage = (x / rect.width) * 100;
+    if (percentage < 0) percentage = 0;
+    if (percentage > 100) percentage = 100;
+    setSliderPos(percentage);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    handleMove(e.clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    if (e.touches && e.touches[0]) {
+      handleMove(e.touches[0].clientX);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => setIsDragging(false);
+    if (isDragging) {
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('touchend', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full h-[320px] md:h-[420px] rounded-[2rem] overflow-hidden select-none cursor-ew-resize border border-white/20 shadow-2xl"
+      onMouseMove={handleMouseMove}
+      onTouchMove={handleTouchMove}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        handleMove(e.clientX);
+      }}
+      onTouchStart={(e) => {
+        setIsDragging(true);
+        if (e.touches && e.touches[0]) {
+          handleMove(e.touches[0].clientX);
+        }
+      }}
+    >
+      {/* After Image (Base) */}
+      <img
+        src={afterImg}
+        alt="After Cleanup"
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+      />
+      <div className="absolute right-4 bottom-4 bg-emerald-600/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 uppercase tracking-widest shadow-sm">
+        {afterLabel}
+      </div>
+
+      {/* Before Image (Overlay clipped via CSS inset) */}
+      <div
+        className="absolute inset-0 overflow-hidden pointer-events-none w-full h-full"
+        style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+      >
+        <img
+          src={beforeImg}
+          alt="Before Cleanup"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        />
+      </div>
+      <div
+        className="absolute left-4 bottom-4 bg-destructive/90 backdrop-blur text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 uppercase tracking-widest shadow-sm pointer-events-none"
+        style={{ opacity: sliderPos > 15 ? 1 : 0, transition: 'opacity 0.2s' }}
+      >
+        {beforeLabel}
+      </div>
+
+      {/* Slider Split Line and Handle */}
+      <div
+        className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize z-20 flex items-center justify-center shadow-lg pointer-events-none"
+        style={{ left: `${sliderPos}%` }}
+      >
+        <div className="w-10 h-10 rounded-full bg-white/95 border-2 border-primary/30 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform text-primary font-black select-none pointer-events-none">
+          <span className="text-lg">↔</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Cleanup Carousel Component
+const CleanupCarousel = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const cleanups = [
+    {
+      id: 1,
+      title: "Bistupur Market",
+      location: "Bistupur, Jamshedpur",
+      beforeImg: cleanupBefore1,
+      afterImg: cleanupAfter1,
+      date: "28 May 2026",
+      resolveTime: "2.5 Hours",
+      impact: "18.5 kg Recycled",
+      points: "+50 EcoPoints",
+      description: "A huge pile of plastic packaging and cardboard was reported by shopkeepers behind the market complex. JNAC dispatched a vehicle to clear it, recovering valuable recyclables.",
+      category: "Commercial Hub"
+    },
+    {
+      id: 2,
+      title: "Jubilee Park",
+      location: "Sakchi, Jamshedpur",
+      beforeImg: cleanupBefore2,
+      afterImg: cleanupAfter2,
+      date: "29 May 2026",
+      resolveTime: "1.2 Hours",
+      impact: "12.0 kg Recycled",
+      points: "+35 EcoPoints",
+      description: "Discarded plastic cups and wrappers near the children's play zone were reported by morning walkers. The spot was cleared by our active driver team in record time.",
+      category: "Recreational Park"
+    },
+    {
+      id: 3,
+      title: "Dimna Lake Shore",
+      location: "Dimna, Jamshedpur",
+      beforeImg: cleanupBefore3,
+      afterImg: cleanupAfter3,
+      date: "29 May 2026",
+      resolveTime: "3.1 Hours",
+      impact: "22.4 kg Recycled",
+      points: "+60 EcoPoints",
+      description: "A large collection of plastic picnic waste and bottles was left on the grass shore of Dimna Lake. Citizens tagged the spot, and volunteers teamed up with crews to restore the pristine lake view.",
+      category: "Nature & Lake Shore"
+    },
+    {
+      id: 4,
+      title: "Mango Bridge Side",
+      location: "Mango, Jamshedpur",
+      beforeImg: cleanupBefore4,
+      afterImg: cleanupAfter4,
+      date: "30 May 2026",
+      resolveTime: "1.8 Hours",
+      impact: "15.7 kg Recycled",
+      points: "+45 EcoPoints",
+      description: "Litter piles and food packaging near the riverfront bridge side were reported by community members. The area was fully swept and fitted with new recycling bins.",
+      category: "Riverfront & Public Space"
+    }
+  ];
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % cleanups.length);
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev - 1 + cleanups.length) % cleanups.length);
+  };
+
+  // Automatic Slide Progression
+  useEffect(() => {
+    const timer = setInterval(() => {
+      handleNext();
+    }, 6000); // Auto-slide every 6 seconds
+    return () => clearInterval(timer);
+  }, []);
+
+  const current = cleanups[currentIndex];
+
+  return (
+    <div className="relative w-full max-w-6xl mx-auto px-4 md:px-0">
+      {/* Navigation Arrows */}
+      <div className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-16 z-30">
+        <button
+          onClick={handlePrev}
+          className="w-12 h-12 rounded-full bg-white border border-neutral-200 shadow-lg flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all text-neutral-700"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+      </div>
+      <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:-right-16 z-30">
+        <button
+          onClick={handleNext}
+          className="w-12 h-12 rounded-full bg-white border border-neutral-200 shadow-lg flex items-center justify-center hover:bg-neutral-50 active:scale-95 transition-all text-neutral-700"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Slide Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-white p-6 md:p-10 rounded-[3rem] border border-neutral-200/50 shadow-xl overflow-hidden relative">
+        {/* Visual Slider Part */}
+        <div className="lg:col-span-7 w-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <BeforeAfterSlider
+                beforeImg={current.beforeImg}
+                afterImg={current.afterImg}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Text/Details Part */}
+        <div className="lg:col-span-5 text-left flex flex-col justify-between h-full">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.4 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full text-xs font-bold uppercase tracking-wider">
+                  {current.category}
+                </span>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground font-semibold">
+                  <MapPin className="w-3.5 h-3.5 text-primary" /> {current.location}
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight leading-tight">
+                  {current.title}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">Cleared on {current.date}</p>
+              </div>
+
+              <p className="text-muted-foreground text-base leading-relaxed">
+                {current.description}
+              </p>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="bg-[#fafdfa] p-4 rounded-2xl border border-emerald-500/5 shadow-sm">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm mb-1">
+                    <Clock className="w-4 h-4" /> Resolve Time
+                  </div>
+                  <p className="text-lg font-black text-foreground">{current.resolveTime}</p>
+                </div>
+
+                <div className="bg-[#fafdfa] p-4 rounded-2xl border border-emerald-500/5 shadow-sm">
+                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm mb-1">
+                    <Recycle className="w-4 h-4" /> Recycled
+                  </div>
+                  <p className="text-lg font-black text-foreground">{current.impact}</p>
+                </div>
+
+                <div className="bg-[#fafdfa] p-4 rounded-2xl border border-emerald-500/5 shadow-sm">
+                  <div className="flex items-center gap-2 text-blue-500 font-bold text-sm mb-1">
+                    <Trophy className="w-4 h-4" /> Awarded
+                  </div>
+                  <p className="text-lg font-black text-foreground">{current.points}</p>
+                </div>
+
+                <div className="bg-[#fafdfa] p-4 rounded-2xl border border-emerald-500/5 shadow-sm flex flex-col justify-center items-start">
+                  <span className="text-xs text-muted-foreground font-bold">Status</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-bold mt-1 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
+                    <CheckCircle className="w-3.5 h-3.5" /> Resolved
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Dots Indicator */}
+          <div className="flex gap-2 justify-center lg:justify-start mt-8">
+            {cleanups.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`h-2.5 rounded-full transition-all duration-300 ${currentIndex === idx ? 'w-8 bg-primary' : 'w-2.5 bg-neutral-200'}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
 const Home = () => {
   // Eco-Calculator States
@@ -224,6 +530,21 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Impact in Action: Before/After Cleanup Carousel */}
+      <section className="py-24 px-6 lg:px-8 bg-gradient-to-b from-[#fafcfa] to-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[30vw] h-[30vw] bg-emerald-500/5 rounded-full blur-[100px] -z-10"></div>
+        <div className="text-center w-full max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 mb-4 border border-emerald-500/20 font-bold text-sm">
+            <Sparkles className="w-4 h-4" /> Impact in Action
+          </div>
+          <h2 className="text-3xl md:text-5xl font-black text-foreground tracking-tight">Success Stories in Jamshedpur</h2>
+          <p className="text-muted-foreground mt-4 text-lg">
+            See the concrete transformation when citizens and authorities unite. Drag the slider to compare the reported waste site and the cleared spot!
+          </p>
+        </div>
+        <CleanupCarousel />
+      </section>
+
       {/* 3. Dynamic Eco-Impact Calculator Widget */}
       <section className="py-24 px-6 lg:px-8 max-w-7xl mx-auto relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] bg-primary/5 rounded-[5rem] blur-[120px] -z-10"></div>
@@ -306,6 +627,7 @@ const Home = () => {
           </div>
         </div>
       </section>
+
 
       {/* 4. Core Features */}
       <section className="py-24 px-6 lg:px-8 max-w-7xl mx-auto relative">
