@@ -1,4 +1,7 @@
 /users_credentials.txt
 .env
+.env.*
 backend/.env
+backend/.env.*
 frontend/.env
+frontend/.env.*
