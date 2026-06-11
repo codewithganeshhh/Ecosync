@@ -18,7 +18,7 @@ const LinkedinIcon = () => (
 const About = () => {
   const team = [
     {
-      name: "Ganesh",
+      name: "Ganesh Kumar",
       role: "Lead Full-Stack Developer",
       image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&auto=format&fit=crop",
       details: "Architected the core system, MongoDB database models, geo-tagged reporting engine, and custom Cloudinary upload pipeline.",
@@ -26,7 +26,7 @@ const About = () => {
       linkedin: "#"
     },
     {
-      name: "Project Partner 1",
+      name: "Divya Bhol",
       role: "Frontend & UI/UX Specialist",
       image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&auto=format&fit=crop",
       details: "Crafted the responsive glassmorphism interfaces, interactive dashboards, Framer Motion transitions, and fluid calculator widgets.",
@@ -34,7 +34,7 @@ const About = () => {
       linkedin: "#"
     },
     {
-      name: "Project Partner 2",
+      name: "Ishan Kumar",
       role: "Database & Backend Engineer",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop",
       details: "Designed secure user authentication workflows, optimized system state, driver route trackers, and robust testing layouts.",
