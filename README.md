@@ -116,5 +116,5 @@ npm run dev
 ## 👥 Meet the Innovators
 
 - **Ganesh** — *Lead Full-Stack Developer* (Architected core backend, Cloudinary pipeline, and database models)
-- **Project Partner 1** — *Frontend & UI/UX Specialist* (Designed glassmorphism pages and Framer Motion transitions)
-- **Project Partner 2** — *Database & Backend Engineer* (Configured authentication and driver trackers)
+- **Divya** — *Frontend & UI/UX Specialist* (Designed glassmorphism pages and Framer Motion transitions)
+- **Ishan** — *Database & Backend Engineer* (Configured authentication and driver trackers)
